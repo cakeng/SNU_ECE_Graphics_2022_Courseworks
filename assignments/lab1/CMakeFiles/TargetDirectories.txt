@@ -1,0 +1,3 @@
+/home/cakeng/builds/graphics_programming/assignments/lab1/CMakeFiles/rebuild_cache.dir
+/home/cakeng/builds/graphics_programming/assignments/lab1/CMakeFiles/edit_cache.dir
+/home/cakeng/builds/graphics_programming/assignments/lab1/CMakeFiles/main.dir
