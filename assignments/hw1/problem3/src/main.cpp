@@ -17,8 +17,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window, float dt);
 
 // setting
-const unsigned int SCR_WIDTH = 1800;
-const unsigned int SCR_HEIGHT = 1000;
+const unsigned int SCR_WIDTH = 900;
+const unsigned int SCR_HEIGHT = 600;
 unsigned int SCR_WIDTH_SSAA = SCR_WIDTH * 2;
 unsigned int SCR_HEIGHT_SSAA = SCR_HEIGHT * 2;
 
