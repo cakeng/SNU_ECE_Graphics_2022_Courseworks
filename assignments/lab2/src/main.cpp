@@ -241,11 +241,11 @@ int main()
 			// locate the cubes where you want!
 			glm::mat4 model = glm::translate (glm::mat4(1.0f), cubePositions[i]);
 			for (int j = 0; j < i%3; j++)
-				model = glm::rotate (model, glm::radians (19.0f), glm::vec3 (1.0f, 0.0f, 1.0f));
+				model = glm::rotate (model, glm::radians (39.0f), glm::vec3 (1.0f, 0.0f, 1.0f));
 			for (int j = 0; j < i%2; j++)
-				model = glm::rotate (model, glm::radians (27.0f), glm::vec3 (0.0f, 1.0f, 1.0f));
+				model = glm::rotate (model, glm::radians (23.0f), glm::vec3 (0.0f, 1.0f, 1.0f));
 			for (int j = 0; j < i%5; j++)
-				model = glm::rotate (model, glm::radians (14.0f), glm::vec3 (1.0f, 0.0f, 0.0f));
+				model = glm::rotate (model, glm::radians (47.0f), glm::vec3 (1.0f, 0.0f, 0.0f));
 			ourShader.setMat4("model", model);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);

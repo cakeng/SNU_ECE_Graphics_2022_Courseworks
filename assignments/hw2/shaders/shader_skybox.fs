@@ -1,8 +1,12 @@
 #version 330 core
-// TODO: define in/out and uniform variables.
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D texture_container;
 
 void main()
-{   
-    // mix two texture
-
+{
+   // Fill in the blank
+   FragColor = texture(texture_container, TexCoord);
 }
