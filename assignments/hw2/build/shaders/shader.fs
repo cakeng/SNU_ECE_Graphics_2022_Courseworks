@@ -1,11 +1,22 @@
 #version 330 core
-// TODO: define in/out and uniform variables.
+out vec4 FragColor;
 
+in vec2 TexCoord;
+
+uniform sampler2D texture_container;
 
 void main()
 {
-    // fill in
-    // Hint) you can ignore transparent texture pixel by 
-    // if(color.a < 0.5){discard;}
-
+   // Fill in the blank
+   FragColor = texture(texture_container, TexCoord);
+   if(FragColor.a < 0.5){discard;}
 }
+
+
+// void main()
+// {
+//     // fill in
+//     // Hint) you can ignore transparent texture pixel by 
+//     // 
+
+// }

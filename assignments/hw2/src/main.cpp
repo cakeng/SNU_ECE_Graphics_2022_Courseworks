@@ -275,15 +275,15 @@ int main()
         deltaTime = glfwGetTime() - lastFrame;
         lastFrame = glfwGetTime();
 
-        if (debug_time + 0.5 < glfwGetTime())
-        {
-            debug_time = glfwGetTime();
-            printf ("Cam position: %2.2f,%2.2f,%2.2f, Front: %2.2f,%2.2f,%2.2f, Up: %2.2f,%2.2f,%2.2f, Right: %2.2f,%2.2f,%2.2f, Yaw: %2.2f, Pitch: %2.2f, Zoom: %2.2f, Dayfactor: %2.2f\n",
-            camera.Position.x, camera.Position.y, camera.Position.z,
-            camera.Front.x, camera.Front.y, camera.Front.z,
-            camera.Up.x, camera.Up.y, camera.Up.z, 
-            camera.Right.x, camera.Right.y, camera.Right.z, camera.Yaw, camera.Pitch, camera.Zoom, dayFactor);
-        }
+        // if (debug_time + 0.5 < glfwGetTime())
+        // {
+        //     debug_time = glfwGetTime();
+        //     printf ("Cam position: %2.2f,%2.2f,%2.2f, Front: %2.2f,%2.2f,%2.2f, Up: %2.2f,%2.2f,%2.2f, Right: %2.2f,%2.2f,%2.2f, Yaw: %2.2f, Pitch: %2.2f, Zoom: %2.2f, Dayfactor: %2.2f\n",
+        //     camera.Position.x, camera.Position.y, camera.Position.z,
+        //     camera.Front.x, camera.Front.y, camera.Front.z,
+        //     camera.Up.x, camera.Up.y, camera.Up.z, 
+        //     camera.Right.x, camera.Right.y, camera.Right.z, camera.Yaw, camera.Pitch, camera.Zoom, dayFactor);
+        // }
 
         // input
         // -----
@@ -335,11 +335,11 @@ int main()
 			// locate the cubes where you want!
 			glm::mat4 model = glm::translate (glm::mat4(1.0f), cubePositions[i]);
 			for (int j = 0; j < i%3; j++)
-				model = glm::rotate (model, glm::radians (39.0f), glm::vec3 (1.0f, 0.0f, 1.0f));
+				model = glm::rotate (model, glm::radians (39.0f), glm::vec3 (1.0f, 0.2f, 1.0f));
 			for (int j = 0; j < i%2; j++)
 				model = glm::rotate (model, glm::radians (23.0f), glm::vec3 (0.0f, 1.0f, 1.0f));
 			for (int j = 0; j < i%5; j++)
-				model = glm::rotate (model, glm::radians (47.0f), glm::vec3 (1.0f, 0.0f, 0.0f));
+				model = glm::rotate (model, glm::radians (47.0f), glm::vec3 (1.0f, 0.0f, -0.5f));
 			shader.setMat4("model", model);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
