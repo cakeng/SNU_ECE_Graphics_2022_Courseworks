@@ -1,12 +1,14 @@
 #version 330 core
 out vec4 FragColor;
 
-in vec2 TexCoord;
+in vec3 textureDir;
 
-uniform sampler2D texture_container;
+uniform samplerCube texture_skybox_day;
+uniform samplerCube texture_skybox_night;
+uniform float dayFactor;
 
 void main()
 {
    // Fill in the blank
-   FragColor = texture(texture_container, TexCoord);
+   FragColor = mix(texture(texture_skybox_day, textureDir), texture(texture_skybox_night, textureDir), dayFactor);
 }

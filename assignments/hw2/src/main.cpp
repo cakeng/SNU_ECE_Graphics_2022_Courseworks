@@ -24,13 +24,14 @@ void camera_movement (Camera &camera);
 
 bool isWindowed = true;
 int isKeyboardProcessed[1024] = {0};
+float dayFactor = 0.0f;
 
 // setting
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-Camera camera(glm::vec3(1.17f, 9.701f, -1.046f));
+Camera camera(glm::vec3(1.17f, 2.701f, -1.046f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -91,13 +92,13 @@ int main()
     // TODO : define required VAOs(textured cube, skybox, quad)
     // data are defined in geometry_primitives.h
 
-    unsigned int VBO_cube, VAO_cube;
-    glGenVertexArrays (1, &VAO_cube);
-    glGenBuffers (1, &VBO_cube);
+    unsigned int VBO_container, VAO_container;
+    glGenVertexArrays (1, &VAO_container);
+    glGenBuffers (1, &VBO_container);
 
-    glBindVertexArray (VAO_cube);
+    glBindVertexArray (VAO_container);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_cube);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_container);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_positions_textures), cube_positions_textures, GL_STATIC_DRAW);
 
 	// position attribute
@@ -107,7 +108,19 @@ int main()
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
+    // Skybox VAO, VBO
+    unsigned int VBO_skybox, VAO_skybox;
+    glGenVertexArrays (1, &VAO_skybox);
+    glGenBuffers (1, &VBO_skybox);
 
+    glBindVertexArray (VAO_skybox);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_skybox);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_positions), skybox_positions, GL_STATIC_DRAW);
+
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
+	glEnableVertexAttribArray(0);
 
 
     // world space positions of our cubes
@@ -141,12 +154,12 @@ int main()
 
     // TODO : define textures (container, grass, grass_ground) & cubemap textures (day, night)
 
-    unsigned int texture_containter, texture2;
-
-	// texture_containter
+	// texture_container
 	// ---------
-	glGenTextures(1, &texture_containter);
-	glBindTexture(GL_TEXTURE_2D, texture_containter);
+    unsigned int texture_container;
+    
+	glGenTextures(1, &texture_container);
+	glBindTexture(GL_TEXTURE_2D, texture_container);
 	// set the texture wrapping parameters
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -154,25 +167,105 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// load image, create texture and generate mipmaps
-	int width_containter, height_containter, nrChannels_containter;
+	int width_container, height_container, nrChannels_container;
 	stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-	unsigned char* data_containter = stbi_load("./resources/container.jpg", &width_containter, &height_containter, &nrChannels_containter, 0);
-	if (data_containter)
+	unsigned char* data_container = stbi_load("./resources/container.jpg", &width_container, &height_container, &nrChannels_container, 0);
+	if (data_container)
 	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_containter, height_containter, 0, GL_RGB, GL_UNSIGNED_BYTE, data_containter);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_container, height_container, 0, GL_RGB, GL_UNSIGNED_BYTE, data_container);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else
 	{
 		std::cout << "Failed to load texture" << std::endl;
 	}
-	stbi_image_free(data_containter);
+	stbi_image_free(data_container);
+
+    // texture_grass
+	// ---------
+    unsigned int texture_grass;
+    
+	glGenTextures(1, &texture_grass);
+	glBindTexture(GL_TEXTURE_2D, texture_grass);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// load image, create texture and generate mipmaps
+	int width_grass, height_grass, nrChannels_grass;
+	stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+	unsigned char* data_grass = stbi_load("./resources/grass.png", &width_grass, &height_grass, &nrChannels_grass, 0);
+	if (data_grass)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_grass, height_grass, 0, GL_RGBA, GL_UNSIGNED_BYTE, data_grass);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data_grass);
+
+    // texture_grass_ground
+	// ---------
+    unsigned int texture_grass_ground;
+    
+	glGenTextures(1, &texture_grass_ground);
+	glBindTexture(GL_TEXTURE_2D, texture_grass_ground);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// load image, create texture and generate mipmaps
+	int width_grass_ground, height_grass_ground, nrChannels_grass_ground;
+	stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+	unsigned char* data_grass_ground = stbi_load("./resources/grass_ground.jpg", &width_grass_ground, &height_grass_ground, &nrChannels_grass_ground, 0);
+	if (data_grass_ground)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_grass_ground, height_grass_ground, 0, GL_RGB, GL_UNSIGNED_BYTE, data_grass_ground);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data_grass_ground);
+
+    // texture_skybox
+	// ---------
+    std::vector<std::string> faces_day = 
+    {
+        "./resources/Sky Textures/right.jpg",
+        "./resources/Sky Textures/left.jpg",
+        "./resources/Sky Textures/top.jpg",
+        "./resources/Sky Textures/bottom.jpg",
+        "./resources/Sky Textures/front.jpg",
+        "./resources/Sky Textures/back.jpg"
+    };
+    std::vector<std::string> faces_night =
+    {
+        "./resources/Night Sky Textures/nightRight.png",
+        "./resources/Night Sky Textures/nightLeft.png",
+        "./resources/Night Sky Textures/nightTop.png",
+        "./resources/Night Sky Textures/nightBottom.png",
+        "./resources/Night Sky Textures/nightBack.png",
+        "./resources/Night Sky Textures/nightFront.png"
+    };
+    CubemapTexture texture_skybox_day (faces_day), texture_skybox_night (faces_night);
 
     // TODO : set texture & skybox texture uniform value (initialization)
     // e.g) shader.use(), shader.setInt("texture", 0);
 
     shader.use();
-	shader.setInt("texture_containter", 0);
+	shader.setInt("texture_container", 0);
+    skyboxShader.use();
+	skyboxShader.setInt("texture_skybox_day", 0);
+    skyboxShader.setInt("texture_skybox_night", 1);
+
 
     // render loop
     // -----------
@@ -185,11 +278,11 @@ int main()
         if (debug_time + 0.5 < glfwGetTime())
         {
             debug_time = glfwGetTime();
-            printf ("Cam position: %2.2f,%2.2f,%2.2f, Front: %2.2f,%2.2f,%2.2f, Up: %2.2f,%2.2f,%2.2f, Right: %2.2f,%2.2f,%2.2f, Yaw: %2.2f, Pitch: %2.2f, Zoom: %2.2f\n",
+            printf ("Cam position: %2.2f,%2.2f,%2.2f, Front: %2.2f,%2.2f,%2.2f, Up: %2.2f,%2.2f,%2.2f, Right: %2.2f,%2.2f,%2.2f, Yaw: %2.2f, Pitch: %2.2f, Zoom: %2.2f, Dayfactor: %2.2f\n",
             camera.Position.x, camera.Position.y, camera.Position.z,
             camera.Front.x, camera.Front.y, camera.Front.z,
             camera.Up.x, camera.Up.y, camera.Up.z, 
-            camera.Right.x, camera.Right.y, camera.Right.z, camera.Yaw, camera.Pitch, camera.Zoom);
+            camera.Right.x, camera.Right.y, camera.Right.z, camera.Yaw, camera.Pitch, camera.Zoom, dayFactor);
         }
 
         // input
@@ -205,7 +298,27 @@ int main()
         // TODO : Main Rendering Loop
         /////////////////////////////////////////////////////
 
-        // Normal shader renders.
+        // Skybox Renders
+
+        glDepthMask(GL_FALSE);
+        skyboxShader.use();
+
+        // pass projection matrix to shader (note that in this case it could change every frame)
+		skyboxShader.setMat4("projection", camera.GetProjMatrix());
+		skyboxShader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix())));
+
+        unsigned int dayFactor_loc = glGetUniformLocation (skyboxShader.ID, "dayFactor");
+        glUniform1f (dayFactor_loc, dayFactor);
+
+		glBindVertexArray(VAO_skybox);
+        glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, texture_skybox_day.textureID);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, texture_skybox_night.textureID);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDepthMask(GL_TRUE);
+
+        // Container Renders
 
         shader.use();
 
@@ -213,11 +326,10 @@ int main()
 		shader.setMat4("projection", camera.GetProjMatrix());
 		shader.setMat4("view", camera.GetViewMatrix());
 
-        
         // (1) render boxes(cube) using normal shader.
-		glBindVertexArray(VAO_cube);
+		glBindVertexArray(VAO_container);
         glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture_containter);
+		glBindTexture(GL_TEXTURE_2D, texture_container);
 		for (unsigned int i = 0; i < 10; i++)
 		{
 			// locate the cubes where you want!
@@ -233,10 +345,37 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
+        // Grass Ground Renders
+
+        glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture_grass_ground);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate (model, glm::vec3(0.0f, 0.0f, 0.0f));
+        model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+        model = glm::scale (model, glm::vec3(50.0f, 50.0f, 0.0f));
+        shader.setMat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // Grass Renders
+
+        glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture_grass);
+        for (unsigned int i = 0; i < n_grass; i++)
+		{
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate (model, grassPositions[i]);
+            model = glm::rotate (model, glm::radians (camera.Yaw), glm::vec3 (0.0f, 1.0f, 0.0f));
+            // model = glm::scale (model, glm::vec3(50.0f, 50.0f, 0.0f));
+            shader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+		
 
         // (2) render ground(quad) using normal shader.
         // (3) render billboard grasses(quad) using normal shader.
         // (4) render skybox using skybox shader.
+        
+        
 
 
 
@@ -307,9 +446,18 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         isKeyboardProcessed [GLFW_KEY_D] = 1;
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
-        isKeyboardProcessed [GLFW_KEY_O] = 1;
+        dayFactor -= deltaTime * 1.0;
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
-        isKeyboardProcessed [GLFW_KEY_P] = 1;
+        dayFactor += deltaTime * 1.0;
+
+    if (dayFactor > 1.0f)
+    {
+        dayFactor = 1.0f;
+    }
+    if (dayFactor < 0.0f)
+    {
+        dayFactor = 0.0f;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

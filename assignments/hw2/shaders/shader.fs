@@ -9,6 +9,7 @@ void main()
 {
    // Fill in the blank
    FragColor = texture(texture_container, TexCoord);
+   if(FragColor.a < 0.5){discard;}
 }
 
 
@@ -16,6 +17,6 @@ void main()
 // {
 //     // fill in
 //     // Hint) you can ignore transparent texture pixel by 
-//     // if(color.a < 0.5){discard;}
+//     // 
 
 // }

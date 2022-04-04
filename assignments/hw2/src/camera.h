@@ -19,7 +19,7 @@ enum Camera_Movement {
 };
 
 // Default camera values
-const float YAW         =  175.0f;
+const float YAW         =  0.0f;
 const float PITCH       =  0.0f;
 const float SPEED       =  2.5f;
 const float SENSITIVITY =  0.1f;
@@ -36,6 +36,7 @@ public:
     glm::vec3 Up; // Calculated with camera position at (0,0,0)
     glm::vec3 Right; // Calculated with camera position at (0,0,0)
     glm::vec3 WorldUp;
+    glm::vec3 WorldRight;
     // Euler Angles
     float Yaw;
     float Pitch;
@@ -45,13 +46,14 @@ public:
     float Zoom;
 
     // Constructor with vectors
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 1.0f, 0.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
     {
         // TODO : fill in
         Position = position;
         Up = up;
         Right = glm::vec3(1.0f, 0.0f, 0.0f);
-        WorldUp = glm::vec3(0.0f, 0.0f, 1.0f);
+        WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        WorldRight = glm::vec3(1.0f, 0.0f, 0.0f);
         Yaw = yaw;
         Pitch = pitch;
     }
@@ -150,10 +152,10 @@ public:
         if (Zoom > 179.0f)
         {
             Zoom = 179.0f;
-        }
-        if (Zoom < -179.0f)
+        } 
+        if (Zoom < 1.0f)
         {
-            Zoom = -179.0f;
+            Zoom = 1.0f;
         }
     }
 
@@ -162,11 +164,11 @@ private:
     void updateCameraVectors()
     {
         // TODO : fill in
-        glm::mat4 cam_yaw_mat = glm::rotate (glm::mat4(1.0f), glm::radians (Yaw), glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::mat4 cam_yaw_pitch_mat = glm::rotate (cam_yaw_mat, glm::radians (Pitch), glm::vec3(1.0f, 0.0f, 0.0f));
-        Up = cam_yaw_pitch_mat * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+        glm::mat4 cam_yaw_mat = glm::rotate (glm::mat4(1.0f), glm::radians (Yaw), WorldUp);
+        glm::mat4 cam_yaw_pitch_mat = glm::rotate (cam_yaw_mat, glm::radians (Pitch), WorldRight);
+        Up = cam_yaw_pitch_mat * glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
         Right = cam_yaw_pitch_mat * glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-        Front = cam_yaw_pitch_mat * glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+        Front = cam_yaw_pitch_mat * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);
     }
 };
 #endif
