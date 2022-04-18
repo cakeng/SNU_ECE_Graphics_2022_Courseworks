@@ -28,7 +28,7 @@ if(UNIX)
   include_directories(${GLM_INCLUDE_DIRS})
 endif(UNIX)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
+list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -g0")
 
 add_executable(${NAME} ${SOURCE})
 target_link_libraries(${NAME} ${LIBS})

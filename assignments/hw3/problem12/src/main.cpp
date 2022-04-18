@@ -37,7 +37,7 @@ float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 float currentTime = 0.0f;
 int draw_outline = 0;
-
+int polygon_line_mode = 0;
 int main()
 {
     // glfw: initialize and configure
@@ -99,7 +99,9 @@ int main()
     VAO *vao_spline_u = loadSplineControlPoints ("./resources/spline_control_point_data/spline_u.txt");
     VAO *vao_spline_complex = loadSplineControlPoints ("./resources/spline_control_point_data/spline_complex.txt");
 
-    VAO *vao_spline_complex = loadSplineControlPoints ("./resources/spline_control_point_data/spline_complex.txt");
+    VAO *vao_tes_sphere = loadBezierSurfaceControlPoints ("./resources/bezier_surface_data/sphere.bpt");
+    VAO *vao_tes_gumbo = loadBezierSurfaceControlPoints ("./resources/bezier_surface_data/gumbo.bpt");
+    VAO *vao_tes_teapot = loadBezierSurfaceControlPoints ("./resources/bezier_surface_data/teapot.bpt");
 
     // render loop
     // -----------
@@ -130,7 +132,7 @@ int main()
 
         // Bezier
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate (model, glm::vec3(-0.8f, 0.0f, 0.0f));
+        model = glm::translate (model, glm::vec3(-0.8f, -0.5f, 0.0f));
         // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
         model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.0f));
         spl_shader.setMat4("model", model);
@@ -140,7 +142,7 @@ int main()
 
         // B-spline
         model = glm::mat4(1.0f);
-        model = glm::translate (model, glm::vec3(-0.5f, 0.0f, 0.0f));
+        model = glm::translate (model, glm::vec3(-0.5f, -0.5f, 0.0f));
         // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
         model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.0f));
         spl_shader.setMat4("model", model);
@@ -150,7 +152,7 @@ int main()
 
         // Catmull-Rom 
         model = glm::mat4(1.0f);
-        model = glm::translate (model, glm::vec3(-0.2f, 0.0f, 0.0f));
+        model = glm::translate (model, glm::vec3(-0.2f, -0.5f, 0.0f));
         // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
         model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.0f));
         spl_shader.setMat4("model", model);
@@ -160,7 +162,7 @@ int main()
 
         // (2) render 'u' using Bezier spline
         model = glm::mat4(1.0f);
-        model = glm::translate (model, glm::vec3(0.1f, -0.1f, 0.0f));
+        model = glm::translate (model, glm::vec3(0.1f, -0.6f, 0.0f));
         // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
         model = glm::scale (model, glm::vec3(0.05f, 0.05f, 0.0f));
         spl_shader.setMat4("model", model);
@@ -171,7 +173,7 @@ int main()
         // (3) render loop using Catmull-Rom spline and B-spline.
         // B-spline
         model = glm::mat4(1.0f);
-        model = glm::translate (model, glm::vec3(0.5f, 0.0f, 0.0f));
+        model = glm::translate (model, glm::vec3(0.5f, -0.5f, 0.0f));
         // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
         model = glm::scale (model, glm::vec3(0.15f, 0.15f, 0.0f));
         spl_shader.setMat4("model", model);
@@ -181,7 +183,7 @@ int main()
 
         // Catmull-Rom 
         model = glm::mat4(1.0f);
-        model = glm::translate (model, glm::vec3(0.8f, 0.0f, 0.0f));
+        model = glm::translate (model, glm::vec3(0.8f, -0.5f, 0.0f));
         // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
         model = glm::scale (model, glm::vec3(0.15f, 0.15f, 0.0f));
         spl_shader.setMat4("model", model);
@@ -198,7 +200,7 @@ int main()
 
             // Bezier
             glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate (model, glm::vec3(-0.8f, 0.0f, 0.0f));
+            model = glm::translate (model, glm::vec3(-0.8f, -0.5f, 0.0f));
             // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
             model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.0f));
             ol_shader.setMat4("model", model);
@@ -207,7 +209,7 @@ int main()
 
             // B-spline
             model = glm::mat4(1.0f);
-            model = glm::translate (model, glm::vec3(-0.5f, 0.0f, 0.0f));
+            model = glm::translate (model, glm::vec3(-0.5f, -0.5f, 0.0f));
             // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
             model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.0f));
             ol_shader.setMat4("model", model);
@@ -216,7 +218,7 @@ int main()
 
             // Catmull-Rom 
             model = glm::mat4(1.0f);
-            model = glm::translate (model, glm::vec3(-0.2f, 0.0f, 0.0f));
+            model = glm::translate (model, glm::vec3(-0.2f, -0.5f, 0.0f));
             // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
             model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.0f));
             ol_shader.setMat4("model", model);
@@ -225,7 +227,7 @@ int main()
 
             // (2) render 'u' using Bezier spline
             model = glm::mat4(1.0f);
-            model = glm::translate (model, glm::vec3(0.1f, -0.1f, 0.0f));
+            model = glm::translate (model, glm::vec3(0.1f, -0.6f, 0.0f));
             // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
             model = glm::scale (model, glm::vec3(0.05f, 0.05f, 0.0f));
             ol_shader.setMat4("model", model);
@@ -235,7 +237,7 @@ int main()
             // (3) render loop using Catmull-Rom spline and B-spline.
             // B-spline
             model = glm::mat4(1.0f);
-            model = glm::translate (model, glm::vec3(0.5f, 0.0f, 0.0f));
+            model = glm::translate (model, glm::vec3(0.5f, -0.5f, 0.0f));
             // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
             model = glm::scale (model, glm::vec3(0.15f, 0.15f, 0.0f));
             ol_shader.setMat4("model", model);
@@ -244,7 +246,7 @@ int main()
 
             // Catmull-Rom 
             model = glm::mat4(1.0f);
-            model = glm::translate (model, glm::vec3(0.8f, 0.0f, 0.0f));
+            model = glm::translate (model, glm::vec3(0.8f, -0.5f, 0.0f));
             // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
             model = glm::scale (model, glm::vec3(0.15f, 0.15f, 0.0f));
             ol_shader.setMat4("model", model);
@@ -252,11 +254,52 @@ int main()
             glDrawArrays(GL_LINE_STRIP, 0, vao_spline_complex->num_of_vertex);
         }
 
-
-
         // (Optional) TODO : render Bezier surfaces using tessellation shader.
         
+        tes_shader.use();
+        tes_shader.setMat4("view", camera.GetViewMatrix());
+        tes_shader.setMat4("projection", glm::perspective(glm::radians(camera.Zoom ), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f));
 
+        if (polygon_line_mode == 1)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
+        else
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        tes_shader.setVec3("cameraPosition", camera.Position);
+        
+        printf ("%3.3f\n", glm::distance(glm::vec3(-0.4f, 0.1f, 0.0f), camera.Position));
+        model = glm::mat4(1.0f);
+        model = glm::translate (model, glm::vec3(-0.4f, 0.1f, 0.0f));
+        // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+        model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.25f));
+        tes_shader.setMat4("model", model);
+        tes_shader.setMat4("B", glm::mat4(glm::vec4(-1,3,-3,1), glm::vec4(3,-6,3,0), glm::vec4(-3,3,0,0), glm::vec4(1,0,0,0)));
+        glBindVertexArray(vao_tes_sphere->ID);
+        glPatchParameteri(GL_PATCH_VERTICES, 16);
+        glDrawArrays(GL_PATCHES, 0, vao_tes_sphere->num_of_vertex);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate (model, glm::vec3(0.6f, -0.1f, 0.0f));
+        // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+        model = glm::scale (model, glm::vec3(0.05f, 0.05f, 0.05f));
+        tes_shader.setMat4("model", model);
+        tes_shader.setMat4("B", glm::mat4(glm::vec4(-1,3,-3,1), glm::vec4(3,-6,3,0), glm::vec4(-3,3,0,0), glm::vec4(1,0,0,0)));
+        glBindVertexArray(vao_tes_gumbo->ID);
+        glPatchParameteri(GL_PATCH_VERTICES, 16);
+        glDrawArrays(GL_PATCHES, 0, vao_tes_gumbo->num_of_vertex);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate (model, glm::vec3(0.2f, 0.1f, 0.0f));
+        // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+        model = glm::scale (model, glm::vec3(0.15f, 0.15f, 0.15f));
+        tes_shader.setMat4("model", model);
+        tes_shader.setMat4("B", glm::mat4(glm::vec4(-1,3,-3,1), glm::vec4(3,-6,3,0), glm::vec4(-3,3,0,0), glm::vec4(1,0,0,0)));
+        glBindVertexArray(vao_tes_teapot->ID);
+        glPatchParameteri(GL_PATCH_VERTICES, 16);
+        glDrawArrays(GL_PATCHES, 0, vao_tes_teapot->num_of_vertex);
 
 
 
@@ -297,6 +340,12 @@ void processInput(GLFWwindow *window)
     {
         draw_outline ^= 1;
         last_9_time = currentTime;
+    }
+    static float last_0_time = 0.0f;
+    if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS && currentTime - last_0_time > 0.3)
+    {
+        polygon_line_mode ^= 1;
+        last_0_time = currentTime;
     }
 
     // TODO : 
