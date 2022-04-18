@@ -84,15 +84,15 @@ int main()
     // ------------------------------------
     // TODO: define 3 shaders
     // (1) geometry shader for spline render.
+    Shader spl_shader("./shaders/splines/spline_shader.vs", "./shaders/splines/spline_shader.fs", "./shaders/splines/spline_shader.gs");
     // (2) simple shader for spline's outer line render.
+    Shader ol_shader("./shaders/outer_line_shader.vs", "./shaders/outer_line_shader.fs");
     // (optional) (3) tessellation shader for bezier surface.
 
 
     // TODO : load requied model and save data to VAO. 
     // Implement and use loadSplineControlPoints/loadBezierSurfaceControlPoints in resource_utils.h
-
-
-
+    VAO *vao_spline_simple = loadSplineControlPoints ("./resources/spline_control_point_data/spline_simple.txt");
 
     // render loop
     // -----------
@@ -117,6 +117,15 @@ int main()
 
         // TODO : render splines
         // (1) render simple spline with 4 control points for Bezier, Catmull-Rom and B-spline.
+        spl_shader.use();
+        spl_shader.setMat4("model", glm::mat4(1.0f));
+        spl_shader.setMat4("view", glm::mat4(1.0f));
+        spl_shader.setMat4("projection", glm::mat4(1.0f));
+        spl_shader.setMat4("B", glm::mat4(1.0f));
+        glBindVertexArray(vao_spline_simple->ID);
+        glDrawArrays(GL_LINES_ADJACENCY, 0, 4);
+
+
         // (2) render 'u' using Bezier spline
         // (3) render loop using Catmull-Rom spline and B-spline.
         // You have to also render outer line of control points!
