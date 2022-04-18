@@ -89,6 +89,8 @@ int main()
     // (2) simple shader for spline's outer line render.
     Shader ol_shader("./shaders/outer_line_shader.vs", "./shaders/outer_line_shader.fs");
     // (optional) (3) tessellation shader for bezier surface.
+    Shader tes_shader("./shaders/bezier_surface/tess.vs", "./shaders/bezier_surface/tess.fs", "./shaders/bezier_surface/tess.gs",
+        "./shaders/bezier_surface/TCS.glsl", "./shaders/bezier_surface/TES.glsl");
 
 
     // TODO : load requied model and save data to VAO. 
@@ -97,6 +99,7 @@ int main()
     VAO *vao_spline_u = loadSplineControlPoints ("./resources/spline_control_point_data/spline_u.txt");
     VAO *vao_spline_complex = loadSplineControlPoints ("./resources/spline_control_point_data/spline_complex.txt");
 
+    VAO *vao_spline_complex = loadSplineControlPoints ("./resources/spline_control_point_data/spline_complex.txt");
 
     // render loop
     // -----------
