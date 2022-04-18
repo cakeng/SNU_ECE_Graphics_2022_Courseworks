@@ -334,31 +334,94 @@ object* star()
 bool is_holeEdge(edge* e)
 {
 	/* fill in the blank */
-	return true; // delete this line after you fill in the blank.
+	return e->f_list->size() == 1; // delete this line after you fill in the blank.
 }
 
 bool is_holeVertex(vertex* v)
 {
 	/* fill in the blank */
-	return true; // delete this line after you fill in the blank.
+	return v->e_list->size() != v->f_list->size(); // delete this line after you fill in the blank.
 }
 
 vertex* face_point(face* f)
 {
-	/* fill in the blank */
-	return NULL; // delete this line after you fill in the blank.
+	if (f->face_pt == NULL)
+	{
+		f->face_pt = vtx_init();
+		f->face_pt->xyz.x = 0.0f;
+		f->face_pt->xyz.y = 0.0f;
+		f->face_pt->xyz.z = 0.0f;
+		for (int i = 0; i < f->v_list->size(); i++)
+		{
+			f->face_pt->xyz.add((*(f->v_list))[i]->xyz);
+		}
+		f->face_pt->xyz.div(f->v_list->size());
+	}
+	return f->face_pt; // delete this line after you fill in the blank.
 }
 
 vertex* edge_point(edge* e)
 {
-	/* fill in the blank */
-	return NULL; // delete this line after you fill in the blank.
+	if (e->edge_pt == NULL)
+	{
+		if (is_holeEdge(e))
+		{
+			e->edge_pt = vtx_init();
+			e->edge_pt->xyz.x = 0.0f;
+			e->edge_pt->xyz.y = 0.0f;
+			e->edge_pt->xyz.z = 0.0f;
+			e->edge_pt->xyz.add (e->v1->xyz);
+			e->edge_pt->xyz.add (e->v2->xyz);
+			e->edge_pt->xyz.div (2.0f);
+		}
+		else
+		{
+			e->edge_pt = vtx_init();
+			e->edge_pt->xyz.x = 0.0f;
+			e->edge_pt->xyz.y = 0.0f;
+			e->edge_pt->xyz.z = 0.0f;
+			e->edge_pt->xyz.add (e->v1->xyz);
+			e->edge_pt->xyz.add (e->v2->xyz);
+			for (int i = 0; i < e->f_list->size(); i++)
+			{
+				e->edge_pt->xyz.add (face_point((*(e->f_list))[i])->xyz);
+			}
+			e->edge_pt->xyz.div (2.0f + e->f_list->size());
+		}
+	}
+	return e->edge_pt; // delete this line after you fill in the blank.
 }
 
 vertex* vertex_point(vertex* v)
 {
 	/* fill in the blank */
-	return NULL; // delete this line after you fill in the blank.
+	if (v->v_new == NULL)
+	{
+		if (is_holeVertex(v))
+		{
+			v->v_new = vtx_init();
+			v->v_new->xyz.x = 0.0f;
+			v->v_new->xyz.y = 0.0f;
+			v->v_new->xyz.z = 0.0f;
+			for (int i = 0; i < v->e_list->size(); i++)
+			{
+				if (is_holeEdge((*(v->e_list))[i]))
+				{
+					v->v_new->xyz.add (face_point((*(v->e_list))[i])->xyz);
+				}
+				
+			}
+
+		}
+		else
+		{
+			v->v_new = vtx_init();
+			v->v_new->xyz.x = 0.0f;
+			v->v_new->xyz.y = 0.0f;
+			v->v_new->xyz.z = 0.0f;
+		}
+	}
+	return v->v_new; // delete this line after you fill in the blank.
 }
 
 object* catmull_clark(object* obj)
