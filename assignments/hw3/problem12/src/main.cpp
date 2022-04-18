@@ -35,7 +35,8 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
-
+float currentTime = 0.0f;
+int draw_outline = 0;
 
 int main()
 {
@@ -93,13 +94,16 @@ int main()
     // TODO : load requied model and save data to VAO. 
     // Implement and use loadSplineControlPoints/loadBezierSurfaceControlPoints in resource_utils.h
     VAO *vao_spline_simple = loadSplineControlPoints ("./resources/spline_control_point_data/spline_simple.txt");
+    VAO *vao_spline_u = loadSplineControlPoints ("./resources/spline_control_point_data/spline_u.txt");
+    VAO *vao_spline_complex = loadSplineControlPoints ("./resources/spline_control_point_data/spline_complex.txt");
+
 
     // render loop
     // -----------
     float oldTime = 0;
     while (!glfwWindowShouldClose(window))
     {
-        float currentTime = glfwGetTime();
+        currentTime = glfwGetTime();
         float dt = currentTime - oldTime;
         deltaTime = dt;
 
@@ -118,18 +122,132 @@ int main()
         // TODO : render splines
         // (1) render simple spline with 4 control points for Bezier, Catmull-Rom and B-spline.
         spl_shader.use();
-        spl_shader.setMat4("model", glm::mat4(1.0f));
         spl_shader.setMat4("view", glm::mat4(1.0f));
         spl_shader.setMat4("projection", glm::mat4(1.0f));
-        spl_shader.setMat4("B", glm::mat4(1.0f));
-        glBindVertexArray(vao_spline_simple->ID);
-        glDrawArrays(GL_LINES_ADJACENCY, 0, 4);
 
+        // Bezier
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate (model, glm::vec3(-0.8f, 0.0f, 0.0f));
+        // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+        model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.0f));
+        spl_shader.setMat4("model", model);
+        spl_shader.setMat4("B", glm::mat4(glm::vec4(-1,3,-3,1), glm::vec4(3,-6,3,0), glm::vec4(-3,3,0,0), glm::vec4(1,0,0,0)));
+        glBindVertexArray(vao_spline_simple->ID);
+        glDrawArrays(GL_LINES_ADJACENCY, 0, vao_spline_simple->num_of_vertex);
+
+        // B-spline
+        model = glm::mat4(1.0f);
+        model = glm::translate (model, glm::vec3(-0.5f, 0.0f, 0.0f));
+        // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+        model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.0f));
+        spl_shader.setMat4("model", model);
+        spl_shader.setMat4("B", glm::mat4(glm::vec4(-1.0/6,3.0/6,-3.0/6,1.0/6), glm::vec4(3.0/6,-6.0/6,3.0/6,0), glm::vec4(-3.0/6.0,0,3.0/6.0,0), glm::vec4(1.0/6.0,4.0/6.0,1.0/6.0,0)));
+        glBindVertexArray(vao_spline_simple->ID);
+        glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, vao_spline_simple->num_of_vertex);
+
+        // Catmull-Rom 
+        model = glm::mat4(1.0f);
+        model = glm::translate (model, glm::vec3(-0.2f, 0.0f, 0.0f));
+        // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+        model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.0f));
+        spl_shader.setMat4("model", model);
+        spl_shader.setMat4("B", glm::mat4(glm::vec4(-0.5,1.5,-1.5,0.5), glm::vec4(1,-2.5,2.0,-0.5), glm::vec4(-0.5,0.0,0.5,0), glm::vec4(0,1,0,0)));
+        glBindVertexArray(vao_spline_simple->ID);
+        glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, vao_spline_simple->num_of_vertex);
 
         // (2) render 'u' using Bezier spline
-        // (3) render loop using Catmull-Rom spline and B-spline.
-        // You have to also render outer line of control points!
+        model = glm::mat4(1.0f);
+        model = glm::translate (model, glm::vec3(0.1f, -0.1f, 0.0f));
+        // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+        model = glm::scale (model, glm::vec3(0.05f, 0.05f, 0.0f));
+        spl_shader.setMat4("model", model);
+        spl_shader.setMat4("B", glm::mat4(glm::vec4(-1,3,-3,1), glm::vec4(3,-6,3,0), glm::vec4(-3,3,0,0), glm::vec4(1,0,0,0)));
+        glBindVertexArray(vao_spline_u->ID);
+        glDrawArrays(GL_LINES_ADJACENCY, 0, vao_spline_u->num_of_vertex);
 
+        // (3) render loop using Catmull-Rom spline and B-spline.
+        // B-spline
+        model = glm::mat4(1.0f);
+        model = glm::translate (model, glm::vec3(0.5f, 0.0f, 0.0f));
+        // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+        model = glm::scale (model, glm::vec3(0.15f, 0.15f, 0.0f));
+        spl_shader.setMat4("model", model);
+        spl_shader.setMat4("B", glm::mat4(glm::vec4(-1.0/6,3.0/6,-3.0/6,1.0/6), glm::vec4(3.0/6,-6.0/6,3.0/6,0), glm::vec4(-3.0/6.0,0,3.0/6.0,0), glm::vec4(1.0/6.0,4.0/6.0,1.0/6.0,0)));
+        glBindVertexArray(vao_spline_complex->ID);
+        glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, vao_spline_complex->num_of_vertex);
+
+        // Catmull-Rom 
+        model = glm::mat4(1.0f);
+        model = glm::translate (model, glm::vec3(0.8f, 0.0f, 0.0f));
+        // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+        model = glm::scale (model, glm::vec3(0.15f, 0.15f, 0.0f));
+        spl_shader.setMat4("model", model);
+        spl_shader.setMat4("B", glm::mat4(glm::vec4(-0.5,1.5,-1.5,0.5), glm::vec4(1,-2.5,2.0,-0.5), glm::vec4(-0.5,0.0,0.5,0), glm::vec4(0,1,0,0)));
+        glBindVertexArray(vao_spline_complex->ID);
+        glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, vao_spline_complex->num_of_vertex);
+
+        // You have to also render outer line of control points!
+        if (draw_outline)
+        {
+            ol_shader.use();
+            ol_shader.setMat4("view", glm::mat4(1.0f));
+            ol_shader.setMat4("projection", glm::mat4(1.0f));
+
+            // Bezier
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate (model, glm::vec3(-0.8f, 0.0f, 0.0f));
+            // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+            model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.0f));
+            ol_shader.setMat4("model", model);
+            glBindVertexArray(vao_spline_simple->ID);
+            glDrawArrays(GL_LINE_STRIP, 0, vao_spline_simple->num_of_vertex);
+
+            // B-spline
+            model = glm::mat4(1.0f);
+            model = glm::translate (model, glm::vec3(-0.5f, 0.0f, 0.0f));
+            // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+            model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.0f));
+            ol_shader.setMat4("model", model);
+            glBindVertexArray(vao_spline_simple->ID);
+            glDrawArrays(GL_LINE_STRIP, 0, vao_spline_simple->num_of_vertex);
+
+            // Catmull-Rom 
+            model = glm::mat4(1.0f);
+            model = glm::translate (model, glm::vec3(-0.2f, 0.0f, 0.0f));
+            // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+            model = glm::scale (model, glm::vec3(0.25f, 0.25f, 0.0f));
+            ol_shader.setMat4("model", model);
+            glBindVertexArray(vao_spline_simple->ID);
+            glDrawArrays(GL_LINE_STRIP, 0, vao_spline_simple->num_of_vertex);
+
+            // (2) render 'u' using Bezier spline
+            model = glm::mat4(1.0f);
+            model = glm::translate (model, glm::vec3(0.1f, -0.1f, 0.0f));
+            // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+            model = glm::scale (model, glm::vec3(0.05f, 0.05f, 0.0f));
+            ol_shader.setMat4("model", model);
+            glBindVertexArray(vao_spline_u->ID);
+            glDrawArrays(GL_LINE_STRIP, 0, vao_spline_u->num_of_vertex);
+
+            // (3) render loop using Catmull-Rom spline and B-spline.
+            // B-spline
+            model = glm::mat4(1.0f);
+            model = glm::translate (model, glm::vec3(0.5f, 0.0f, 0.0f));
+            // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+            model = glm::scale (model, glm::vec3(0.15f, 0.15f, 0.0f));
+            ol_shader.setMat4("model", model);
+            glBindVertexArray(vao_spline_complex->ID);
+            glDrawArrays(GL_LINE_STRIP, 0, vao_spline_complex->num_of_vertex);
+
+            // Catmull-Rom 
+            model = glm::mat4(1.0f);
+            model = glm::translate (model, glm::vec3(0.8f, 0.0f, 0.0f));
+            // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
+            model = glm::scale (model, glm::vec3(0.15f, 0.15f, 0.0f));
+            ol_shader.setMat4("model", model);
+            glBindVertexArray(vao_spline_complex->ID);
+            glDrawArrays(GL_LINE_STRIP, 0, vao_spline_complex->num_of_vertex);
+        }
 
 
 
@@ -170,6 +288,13 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+
+    static float last_9_time = 0.0f;
+    if (glfwGetKey(window, GLFW_KEY_9) == GLFW_PRESS && currentTime - last_9_time > 0.3)
+    {
+        draw_outline ^= 1;
+        last_9_time = currentTime;
+    }
 
     // TODO : 
     // (1) (for spline) if we press key 9, toggle whether to render outer line.
