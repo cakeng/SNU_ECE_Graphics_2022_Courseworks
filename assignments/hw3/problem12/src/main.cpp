@@ -269,8 +269,7 @@ int main()
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
         tes_shader.setVec3("cameraPosition", camera.Position);
-        
-        printf ("%3.3f\n", glm::distance(glm::vec3(-0.4f, 0.1f, 0.0f), camera.Position));
+
         model = glm::mat4(1.0f);
         model = glm::translate (model, glm::vec3(-0.4f, 0.1f, 0.0f));
         // model = glm::rotate (model, glm::radians (90.0f), glm::vec3 (-1.0f, 0.0f, 0.0f));
