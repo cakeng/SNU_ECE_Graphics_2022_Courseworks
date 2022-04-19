@@ -4,7 +4,7 @@
 CMakeFiles/main.dir/glad/src/glad.c.o
  ../../../includes/KHR/khrplatform.h
  ../../../includes/glad/glad.h
- /home/cakeng/builds/graphics_programming/assignments/hw3/problem12/glad/src/glad.c
+ /home/cakeng/build/graphics_2022/assignments/hw3/problem12/glad/src/glad.c
 CMakeFiles/main.dir/src/main.cpp.o
  ../../../includes/GLFW/glfw3.h
  ../../../includes/KHR/khrplatform.h
@@ -209,9 +209,9 @@ CMakeFiles/main.dir/src/main.cpp.o
  ../../../includes/glm/vec3.hpp
  ../../../includes/glm/vec4.hpp
  ../../../includes/glm/vector_relational.hpp
- /home/cakeng/builds/graphics_programming/assignments/hw3/problem12/src/camera.h
- /home/cakeng/builds/graphics_programming/assignments/hw3/problem12/src/main.cpp
- /home/cakeng/builds/graphics_programming/assignments/hw3/problem12/src/math_utils.h
- /home/cakeng/builds/graphics_programming/assignments/hw3/problem12/src/opengl_utils.h
- /home/cakeng/builds/graphics_programming/assignments/hw3/problem12/src/resource_utils.h
- /home/cakeng/builds/graphics_programming/assignments/hw3/problem12/src/shader.h
+ /home/cakeng/build/graphics_2022/assignments/hw3/problem12/src/camera.h
+ /home/cakeng/build/graphics_2022/assignments/hw3/problem12/src/main.cpp
+ /home/cakeng/build/graphics_2022/assignments/hw3/problem12/src/math_utils.h
+ /home/cakeng/build/graphics_2022/assignments/hw3/problem12/src/opengl_utils.h
+ /home/cakeng/build/graphics_2022/assignments/hw3/problem12/src/resource_utils.h
+ /home/cakeng/build/graphics_2022/assignments/hw3/problem12/src/shader.h

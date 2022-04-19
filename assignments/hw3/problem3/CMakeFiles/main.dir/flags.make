@@ -9,7 +9,7 @@ C_DEFINES =
 
 C_INCLUDES = -I/usr/lib/cmake/glm -I/home/cakeng/build/graphics_2022/assignments/hw3/problem3/../../../includes 
 
-CXX_FLAGS = -std=c++11 -g  
+CXX_FLAGS = -std=c++11   
 
 CXX_DEFINES = 
 

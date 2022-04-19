@@ -7,11 +7,11 @@ C_FLAGS =
 
 C_DEFINES = 
 
-C_INCLUDES = -I/usr/lib/cmake/glm -I/home/cakeng/builds/graphics_programming/assignments/hw3/problem12/../../../includes -I/home/cakeng/builds/graphics_programming/assignments/hw3/problem12/glad/include 
+C_INCLUDES = -I/usr/lib/cmake/glm -I/home/cakeng/build/graphics_2022/assignments/hw3/problem12/../../../includes -I/home/cakeng/build/graphics_2022/assignments/hw3/problem12/glad/include 
 
-CXX_FLAGS = -std=c++11 -g0  
+CXX_FLAGS = -std=c++11  
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/usr/lib/cmake/glm -I/home/cakeng/builds/graphics_programming/assignments/hw3/problem12/../../../includes -I/home/cakeng/builds/graphics_programming/assignments/hw3/problem12/glad/include 
+CXX_INCLUDES = -I/usr/lib/cmake/glm -I/home/cakeng/build/graphics_2022/assignments/hw3/problem12/../../../includes -I/home/cakeng/build/graphics_2022/assignments/hw3/problem12/glad/include 
 
