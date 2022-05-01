@@ -127,8 +127,8 @@ int main()
         // TODO : render splines
         // (1) render simple spline with 4 control points for Bezier, Catmull-Rom and B-spline.
         spl_shader.use();
-        spl_shader.setMat4("view", glm::mat4(1.0f));
-        spl_shader.setMat4("projection", glm::mat4(1.0f));
+        spl_shader.setMat4("view", camera.GetViewMatrix());
+        spl_shader.setMat4("projection", glm::perspective(glm::radians(camera.Zoom ), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f));
 
         // Bezier
         glm::mat4 model = glm::mat4(1.0f);
@@ -195,8 +195,8 @@ int main()
         if (draw_outline)
         {
             ol_shader.use();
-            ol_shader.setMat4("view", glm::mat4(1.0f));
-            ol_shader.setMat4("projection", glm::mat4(1.0f));
+            ol_shader.setMat4("view", camera.GetViewMatrix());
+            ol_shader.setMat4("projection", glm::perspective(glm::radians(camera.Zoom ), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f));
 
             // Bezier
             glm::mat4 model = glm::mat4(1.0f);

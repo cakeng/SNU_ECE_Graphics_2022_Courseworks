@@ -51,6 +51,37 @@ vertex* add_vertex(object* obj, const coord& coord)
 	return newvtx;
 }
 
+vertex* find_vertex(object* obj, const coord& coord)
+{
+	std::vector<vertex*>* vtxList = obj->v_list;
+	for(int i = 0; i < vtxList->size(); i++)
+	{
+		if((*vtxList)[i]->xyz.x == coord.x && (*vtxList)[i]->xyz.y == coord.y && (*vtxList)[i]->xyz.z == coord.z)
+		{
+			return (*vtxList)[i];
+		}
+	}
+	return NULL;
+}
+
+vertex* find_if_not_add_vertex (object* obj, const coord& coord)
+{
+	vertex *target = find_vertex (obj, coord);
+	if (!target) target = add_vertex (obj, coord);
+	return target;
+}
+
+edge* add_edge(object* obj, vertex* v1, vertex* v2)
+{
+	edge* newedge = edge_init();
+	newedge->v1 = v1;
+	newedge->v2 = v2;
+	v1->e_list->push_back(newedge);
+	v2->e_list->push_back(newedge);
+	obj->e_list->push_back(newedge);
+	return newedge;
+}
+
 edge* find_edge(object* obj, vertex* v1, vertex* v2)
 {
 	std::vector<edge*>* v1_edgeList = v1->e_list;
@@ -64,15 +95,11 @@ edge* find_edge(object* obj, vertex* v1, vertex* v2)
 	return NULL;
 }
 
-edge* add_edge(object* obj, vertex* v1, vertex* v2)
+edge* find_if_not_add_edge (object* obj, vertex* v1, vertex* v2)
 {
-	edge* newedge = edge_init();
-	newedge->v1 = v1;
-	newedge->v2 = v2;
-	v1->e_list->push_back(newedge);
-	v2->e_list->push_back(newedge);
-	obj->e_list->push_back(newedge);
-	return newedge;
+	edge *target = find_edge (obj, v1, v2);
+	if (!target) target = add_edge (obj, v1, v2);
+	return target;
 }
 
 face* add_face(object* obj, const std::vector<int>& vertexIndices)
@@ -184,7 +211,6 @@ void aggregate_vertices(object* obj)
 		obj->vertices->push_back(temp_norm.y);
 		obj->vertices->push_back(temp_norm.z);
 	}
-
 	if (obj->vertices_per_face == 3)
 	{
 		for (int i = 0; i < obj->f_list->size(); i++)
@@ -195,7 +221,6 @@ void aggregate_vertices(object* obj)
 			obj->vertexIndices->push_back((*temp)[2]->idx);
 		}
 	}
-
 	else if (obj->vertices_per_face == 4)
 	{
 		for (int i = 0; i < obj->f_list->size(); i++)
@@ -301,21 +326,21 @@ object* star()
 	}
 
 	for (i = 0; i < 15; i++) add_vertex(m, coord(v[i].x, v[i].y, v[i].z));
-	add_face(m, { 0, 5, 9 });
-	add_face(m, { 1, 6, 5 });
-	add_face(m, { 2, 7, 6 });
-	add_face(m, { 3, 8, 7 });
-	add_face(m, { 4, 9, 8 });
+	add_face(m, { 0, 5, 9 });  // 0 1 2
+	add_face(m, { 1, 6, 5 });  // 3 4 1
+	add_face(m, { 2, 7, 6 });  // 5 6 4
+	add_face(m, { 3, 8, 7 });  // 7 8 6
+	add_face(m, { 4, 9, 8 });  // 9 2 8
 
-	add_face(m, { 0, 14, 10 });
-	add_face(m, { 1, 10, 11 });
-	add_face(m, { 2, 11, 12 });
-	add_face(m, { 3, 12, 13 });
-	add_face(m, { 4, 13, 14 });
+	add_face(m, { 0, 14, 10 });// 0 10 11
+	add_face(m, { 1, 10, 11 });// 3 11 12
+	add_face(m, { 2, 11, 12 });// 5 12 13
+	add_face(m, { 3, 12, 13 });// 7 13 14
+	add_face(m, { 4, 13, 14 });// 9 14 10
 
-	add_face(m, { 0, 10, 5 });
-	add_face(m, { 1, 5, 10 });
-	add_face(m, { 1, 11, 6 });
+	add_face(m, { 0, 10, 5 });// 0 11 1
+	add_face(m, { 1, 5, 10 });// 3 1 11
+	add_face(m, { 1, 11, 6 });// 3 12 4
 	add_face(m, { 2, 6, 11 });
 	add_face(m, { 2, 12, 7 });
 	add_face(m, { 3, 7, 12 });
@@ -357,6 +382,12 @@ vertex* face_point(face* f)
 		}
 		f->face_pt->xyz.div(f->v_list->size());
 	}
+	//printf ("Face point (%3.3f, %3.3f, %3.3f) from vertice ", f->face_pt->xyz.x, f->face_pt->xyz.y, f->face_pt->xyz.z);
+	for (int i = 0; i < f->v_list->size(); i++)
+	{
+		//printf ("(%3.3f, %3.3f, %3.3f) ", (*(f->v_list))[i]->xyz.x, (*(f->v_list))[i]->xyz.y, (*(f->v_list))[i]->xyz.z);
+	}
+	//printf ("\n");
 	return f->face_pt; // delete this line after you fill in the blank.
 }
 
@@ -373,6 +404,10 @@ vertex* edge_point(edge* e)
 			e->edge_pt->xyz.add (e->v1->xyz);
 			e->edge_pt->xyz.add (e->v2->xyz);
 			e->edge_pt->xyz.div (2.0f);
+			//printf ("Edge point (%3.3f, %3.3f, %3.3f) from vertice ", e->edge_pt->xyz.x, e->edge_pt->xyz.y, e->edge_pt->xyz.z);
+			//printf ("(%3.3f, %3.3f, %3.3f) ", e->v1->xyz.x, e->v1->xyz.y, e->v1->xyz.z);
+			//printf ("(%3.3f, %3.3f, %3.3f) ", e->v2->xyz.x, e->v2->xyz.y, e->v2->xyz.z);
+			//printf ("\n");
 		}
 		else
 		{
@@ -387,6 +422,14 @@ vertex* edge_point(edge* e)
 				e->edge_pt->xyz.add (face_point((*(e->f_list))[i])->xyz);
 			}
 			e->edge_pt->xyz.div (2.0f + e->f_list->size());
+			//printf ("Edge point (%3.3f, %3.3f, %3.3f) from vertice ", e->edge_pt->xyz.x, e->edge_pt->xyz.y, e->edge_pt->xyz.z);
+			//printf ("(%3.3f, %3.3f, %3.3f) ", e->v1->xyz.x, e->v1->xyz.y, e->v1->xyz.z);
+			//printf ("(%3.3f, %3.3f, %3.3f) ", e->v2->xyz.x, e->v2->xyz.y, e->v2->xyz.z);
+			for (int i = 0; i < e->f_list->size(); i++)
+			{
+				//printf ("(%3.3f, %3.3f, %3.3f) ", (*(e->f_list))[i]->face_pt->xyz.x, (*(e->f_list))[i]->face_pt->xyz.y, (*(e->f_list))[i]->face_pt->xyz.z);
+			}
+			//printf ("\n");
 		}
 	}
 	return e->edge_pt; // delete this line after you fill in the blank.
@@ -403,15 +446,26 @@ vertex* vertex_point(vertex* v)
 			v->v_new->xyz.x = 0.0f;
 			v->v_new->xyz.y = 0.0f;
 			v->v_new->xyz.z = 0.0f;
+			int count = 0;
 			for (int i = 0; i < v->e_list->size(); i++)
 			{
-				if (is_holeEdge((*(v->e_list))[i]))
+				if (is_holeEdge( (*(v->e_list))[i] ))
 				{
-					v->v_new->xyz.add (face_point((*(v->e_list))[i])->xyz);
+					vertex *temp = vtx_init();
+					temp->xyz.x = 0;
+					temp->xyz.y = 0;
+					temp->xyz.z = 0;
+					temp->xyz.add ( (*(v->e_list))[i]->v1->xyz );
+					temp->xyz.add ( (*(v->e_list))[i]->v2->xyz );
+					temp->xyz.div(2.0f);
+					v->v_new->xyz.add(temp->xyz);
+					count++;
+					delete temp;
 				}
-				
 			}
-
+			v->v_new->xyz.add(v->xyz);
+			count++;
+			v->v_new->xyz.div (count);
 		}
 		else
 		{
@@ -419,8 +473,46 @@ vertex* vertex_point(vertex* v)
 			v->v_new->xyz.x = 0.0f;
 			v->v_new->xyz.y = 0.0f;
 			v->v_new->xyz.z = 0.0f;
+
+			vertex *avg_face = vtx_init();
+			avg_face->xyz.x = 0;
+			avg_face->xyz.y = 0;
+			avg_face->xyz.z = 0;
+			for (int i = 0; i < v->f_list->size(); i++)
+			{
+				avg_face->xyz.add ( face_point ((*(v->f_list))[i])->xyz );
+			}
+			avg_face->xyz.div (v->f_list->size());
+			vertex *avg_mid_points = vtx_init();
+			avg_mid_points->xyz.x = 0;
+			avg_mid_points->xyz.y = 0;
+			avg_mid_points->xyz.z = 0;
+			for (int i = 0; i < v->e_list->size(); i++)
+			{
+					vertex *temp = vtx_init();
+					temp->xyz.x = 0;
+					temp->xyz.y = 0;
+					temp->xyz.z = 0;
+					temp->xyz.add ( (*(v->e_list))[i]->v1->xyz );
+					temp->xyz.add ( (*(v->e_list))[i]->v2->xyz );
+					temp->xyz.div(2.0f);
+					avg_mid_points->xyz.add(temp->xyz);
+					delete temp;
+			}		
+
+			avg_mid_points->xyz.div (v->e_list->size());
+			avg_mid_points->xyz.mul (2.0f);
+
+			v->v_new->xyz.add(v->xyz);
+			v->v_new->xyz.mul(v->f_list->size() - 3);
+			v->v_new->xyz.add(avg_face->xyz);
+			v->v_new->xyz.add(avg_mid_points->xyz);
+			v->v_new->xyz.div(v->f_list->size());
+			delete avg_face;
+			delete avg_mid_points;
 		}
 	}
+	//printf ("Vertex point (%3.3f, %3.3f, %3.3f)\n", v->v_new->xyz.x, v->v_new->xyz.y, v->v_new->xyz.z);
 	return v->v_new; // delete this line after you fill in the blank.
 }
 
@@ -430,10 +522,99 @@ object* catmull_clark(object* obj)
 	newobj->vertices_per_face = 4;
 
 	/* fill in the blank */
+	for (int i = 0; i < obj->f_list->size(); i++)
+	{
+		face *face_p = (*(obj->f_list))[i];
+		if (obj->vertices_per_face == 3)
+		{
+			//printf ("Face idx %d: Triangular.\n", i);
+			vertex *a = (*face_p->v_list)[0];
+			vertex *b = (*face_p->v_list)[1];
+			vertex *c = (*face_p->v_list)[2];
+
+			edge *ab = find_edge (obj, a, b);
+			edge *bc = find_edge (obj, b, c);
+			edge *ca = find_edge (obj, c, a);
+
+			face* abc = face_p;
+
+			vertex *temp = vertex_point(a);
+			vertex *vertex_point_a = find_if_not_add_vertex (newobj, temp->xyz);
+			temp = vertex_point(b);
+			vertex *vertex_point_b = find_if_not_add_vertex (newobj, temp->xyz);
+			temp = vertex_point(c);
+			vertex *vertex_point_c = find_if_not_add_vertex (newobj, temp->xyz);
+			//printf ("Vertex points added.\n");
+			temp = edge_point(ab);
+			vertex *edge_point_ab = find_if_not_add_vertex (newobj, temp->xyz);
+			temp = edge_point(bc);
+			vertex *edge_point_bc = find_if_not_add_vertex (newobj, temp->xyz);
+			temp = edge_point(ca);
+			vertex *edge_point_ca = find_if_not_add_vertex (newobj, temp->xyz);
+			//printf ("Edge points added.\n");
+			temp = face_point(abc);
+			vertex *face_point_abc = find_if_not_add_vertex (newobj, temp->xyz);
+			//printf ("New vertice added.\n");
+
+			add_face (newobj, {vertex_point_a->idx, edge_point_ab->idx, face_point_abc->idx, edge_point_ca->idx});
+			add_face (newobj, {vertex_point_b->idx, edge_point_bc->idx, face_point_abc->idx, edge_point_ab->idx});
+			add_face (newobj, {vertex_point_c->idx, edge_point_ca->idx, face_point_abc->idx, edge_point_bc->idx});
+
+			//printf ("Face idx %d divided.\n", i);
+		}
+		else
+		{
+			//printf ("Face idx %d: Quad.\n", i);
+			vertex *a = (*face_p->v_list)[0];
+			vertex *b = (*face_p->v_list)[1];
+			vertex *c = (*face_p->v_list)[2];
+			vertex *d = (*face_p->v_list)[3];
+
+			edge *ab = find_edge (obj, a, b);
+			edge *bc = find_edge (obj, b, c);
+			edge *cd = find_edge (obj, c, d);
+			edge *da = find_edge (obj, d, a);
+
+			face* abcd = face_p;
+
+			vertex *temp = vertex_point(a);
+			vertex *vertex_point_a = find_if_not_add_vertex (newobj, temp->xyz);
+			temp = vertex_point(b);
+			vertex *vertex_point_b = find_if_not_add_vertex (newobj, temp->xyz);
+			temp = vertex_point(c);
+			vertex *vertex_point_c = find_if_not_add_vertex (newobj, temp->xyz);
+			temp = vertex_point(d);
+			vertex *vertex_point_d = find_if_not_add_vertex (newobj, temp->xyz);
+			//printf ("Vertex points added.\n");
+			temp = edge_point(ab);
+			vertex *edge_point_ab = find_if_not_add_vertex (newobj, temp->xyz);
+			temp = edge_point(bc);
+			vertex *edge_point_bc = find_if_not_add_vertex (newobj, temp->xyz);
+			temp = edge_point(cd);
+			vertex *edge_point_cd = find_if_not_add_vertex (newobj, temp->xyz);
+			temp = edge_point(da);
+			vertex *edge_point_da = find_if_not_add_vertex (newobj, temp->xyz);
+			//printf ("Edge points added.\n");
+			temp = face_point(abcd);
+			vertex *face_point_abcd = find_if_not_add_vertex (newobj, temp->xyz);
+			//printf ("New vertice added.\n");
+
+			add_face (newobj, {vertex_point_a->idx, edge_point_ab->idx, face_point_abcd->idx, edge_point_da->idx});
+			add_face (newobj, {vertex_point_b->idx, edge_point_bc->idx, face_point_abcd->idx, edge_point_ab->idx});
+			add_face (newobj, {vertex_point_c->idx, edge_point_cd->idx, face_point_abcd->idx, edge_point_bc->idx});
+			add_face (newobj, {vertex_point_d->idx, edge_point_da->idx, face_point_abcd->idx, edge_point_cd->idx});
+
+			//printf ("Face idx %d divided.\n", i);
+		}
+	}
+	//printf ("Faces divided.\n");
+
 
 	setNorm(newobj);
+	//printf ("Norm set.\n");
 
 	aggregate_vertices(newobj);
+	//printf ("Vertices aggregated.\n");
 
 	delete obj;
 

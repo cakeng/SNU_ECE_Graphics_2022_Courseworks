@@ -129,6 +129,12 @@ int main()
 		glClearColor(0.f, 0.f, 0.f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * obj->vertices->size(), obj->vertices->data(), GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * obj->vertexIndices->size(), obj->vertexIndices->data(), GL_STATIC_DRAW);
+
 		// render the triangle
 		ourShader.use();
 		float currentTime = glfwGetTime();
@@ -174,6 +180,25 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		glfwSetWindowShouldClose(window, true);
 	}
 	/* fill in the blank */
+	if (key == GLFW_KEY_1 && action == GLFW_PRESS)
+    {
+		delete obj;
+		obj = cube();
+	}
+	if (key == GLFW_KEY_2 && action == GLFW_PRESS)
+    {
+		delete obj;
+		obj = donut();
+	}
+	if (key == GLFW_KEY_3 && action == GLFW_PRESS)
+    {
+		delete obj;
+		obj = star();
+	}
+	if (key == GLFW_KEY_D && action == GLFW_PRESS)
+    {
+		obj = catmull_clark(obj);
+	}
 	
 }
 

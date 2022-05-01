@@ -13,7 +13,7 @@ void main()
     if(gl_InvocationID == 0){
         vec3 worldPos = gl_in[ gl_InvocationID ].gl_Position.xyz;
         float dist = distance(worldPos, cameraPosition);
-        float v = clamp((10 - dist) * 1, 1.0f, 15.0f);
+        float v = clamp((4 - dist) * 4, 1.0f, 16.0f);
         gl_TessLevelOuter[0] = v;
         gl_TessLevelOuter[1] = v;
         gl_TessLevelOuter[2] = v;
