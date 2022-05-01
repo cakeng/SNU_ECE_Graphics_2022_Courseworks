@@ -47,7 +47,7 @@ float lastFrame = 0.0f;
 float currentTime = 0.0f;
 
 float useNormalMap = 0.0f;
-float useSpecular = 0.0f;
+float useSpecular = 1.0f;
 float useLighting = 0.0f;
 float useShadow = 0.0f;
 
@@ -224,6 +224,7 @@ int main()
         lightingShader.setMat4("projection", projection);
         lightingShader.setVec3("light.dir", sun.lightDir);
         lightingShader.setVec3("light.color", sun.lightColor);
+        lightingShader.setMat4("viewPos", view);
 
         map<Model*, vector<Entity*>>::iterator it;
         for (it = scene.entities.begin(); it != scene.entities.end(); it++)
@@ -231,8 +232,8 @@ int main()
             for (int i = 0; i < it->second.size(); i++)
             {
                 // printf ("Rendering VAO %d, iter %d.\n", it->first->VAO, i);
-                lightingShader.setFloat("useNormalMap", useNormalMap);
-                lightingShader.setFloat("useSpecularMap", useSpecular);
+                lightingShader.setFloat("useNormalMap", it->first->normal? useNormalMap : 0);
+                lightingShader.setFloat("useSpecularMap", it->first->specular? useSpecular : 0);
                 lightingShader.setFloat("useShadow", useShadow);
                 lightingShader.setFloat("useLighting", useLighting);
 
@@ -296,7 +297,7 @@ void processInput(GLFWwindow* window, DirectionalLight* sun)
         camera.ProcessKeyboard(RIGHT, deltaTime);
 
     static float key_time = 0.0f;
-    if (currentTime > key_time + 0.25f)
+    if (currentTime > key_time + 0.15f)
     {
         key_time = currentTime;
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
