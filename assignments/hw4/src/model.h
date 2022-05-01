@@ -39,6 +39,7 @@ public:
     Model(string const &path):diffuse(NULL), normal(NULL), specular(NULL){
         loadModel(path);
         this->VAO = mesh.VAO;
+        printf ("%s - VAO: %d\n", path.c_str(), this->VAO);
     }
 
     void bind() {

@@ -42,6 +42,11 @@ public:
 
 	void updateLightDir() {
 		// TODO:
+		glm::vec4 unit = glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::rotate (model, glm::radians (azimuth), glm::vec3 (0.0f, 1.0f, 0.0f));
+		model = glm::rotate (model, glm::radians (elevation), glm::vec3 (1.0f, 0.0f, 0.0f));
+		lightDir = -model*unit;
 
 	}
 
@@ -50,7 +55,15 @@ public:
 	{
 		// TODO:
 		// set elevation between 15 to 80 (degree)!
+		azimuth += xoffset;
+		azimuth = (azimuth >= 360.0f)? azimuth-360.0f : azimuth;
+		azimuth = (azimuth <= 0.0f)? azimuth+360.0f : azimuth;
 
+		elevation += yoffset;
+		elevation = (elevation >= 80.0f)? 80.0f : elevation;
+		elevation = (elevation <= 15.0f)? 15.0f : elevation;
+
+		updateLightDir();
 	}
 };
 
