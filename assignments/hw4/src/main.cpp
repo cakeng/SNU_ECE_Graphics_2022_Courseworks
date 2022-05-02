@@ -31,8 +31,8 @@ bool isKeyboardDone[1024] = { 0 };
 // setting
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-const unsigned int SHADOW_WIDTH = 2048;
-const unsigned int SHADOW_HEIGHT = 2048;
+const unsigned int SHADOW_WIDTH = 2048*8;
+const unsigned int SHADOW_HEIGHT = 2048*8;
 const float planeSize = 15.f;
 
 // camera
@@ -50,6 +50,37 @@ float useNormalMap = 0.0f;
 float useSpecular = 1.0f;
 float useLighting = 0.0f;
 float useShadow = 0.0f;
+float usePCF = 0.0f;
+float useCSM = 0.0f;
+
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+void renderQuad()
+{
+    if (quadVAO == 0)
+    {
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+}
 
 int main()
 {
@@ -98,7 +129,7 @@ int main()
     Shader lightingShader("./shaders/shader_lighting.vs", "./shaders/shader_lighting.fs"); // you can name your shader files however you like
     Shader shadowShader("./shaders/shadow.vs", "./shaders/shadow.fs");
     Shader skyboxShader("./shaders/shader_skybox.vs", "./shaders/shader_skybox.fs");
-
+    Shader debugDepthQuad("./shaders/debug_quad.vs", "./shaders/debug_quad_depth.fs");
 
     // define models
     // There can be three types 
@@ -176,7 +207,7 @@ int main()
     lightingShader.setInt("material.diffuseSampler", 0);
     lightingShader.setInt("material.specularSampler", 1);
     lightingShader.setInt("material.normalSampler", 2);
-    lightingShader.setInt("depthMapSampler", 3);
+    lightingShader.setInt("shadowMap", 3);
     lightingShader.setFloat("material.shininess", 64.f);    // set shininess to constant value.
 
     skyboxShader.use();
@@ -199,8 +230,8 @@ int main()
             debugTime = currentTime;
             printf ("Sun az: %2.2f, el: %2.2f, Dir: (%2.2f, %2.2f, %2.2f)\nuseNorm: %2.2f, useSpec: %2.2f, useShadow: %2.2f, useLight: %2.2f\n",
                 sun.azimuth, sun.elevation, sun.lightDir.x, sun.lightDir.y, sun.lightDir.z, useNormalMap, useSpecular, useShadow, useLighting);
-            printf ("Cam Pos: (%2.2f, %2.2f, %2.2f)\n",
-                camera.Position.x, camera.Position.y, camera.Position.z);
+            printf ("usePCF: %2.2f, useCSM: %2.2f, Cam Pos: (%2.2f, %2.2f, %2.2f), Framerate: %2.2f\n",
+                usePCF, useCSM, camera.Position.x, camera.Position.y, camera.Position.z, 1.0f/deltaTime);
         }
 
         // input
@@ -215,18 +246,54 @@ int main()
         // (1) render shadow map!
             // framebuffer: shadow frame buffer(depth.depthMapFBO)
             // shader : shadow.fs/vs
+        // 1. first render to depth map
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depth.depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        shadowShader.use();
+        // float near_plane = 0.1f, far_plane = 50.0f;
+        // glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        // glm::mat4 lightView = glm::lookAt(-sun.lightDir, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        // glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+        glm::mat4 lightSpaceMatrix =  sun.getProjectionMatrix() * sun.getViewMatrix(camera.Position);
+        shadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+        map<Model*, vector<Entity*>>::iterator it;
+        glCullFace(GL_FRONT);
+        for (it = scene.entities.begin(); it != scene.entities.end(); it++)
+        {
+            if(!it->first->ignoreShadow)
+            {
+                for (int i = 0; i < it->second.size(); i++)
+                {
+                    // printf ("Rendering VAO %d, iter %d.\n", it->first->VAO, i);
+                    it->first->bind();
+                    shadowShader.setMat4("world", it->second[i]->getModelMatrix());
+                    glDrawElements(GL_TRIANGLES, it->first->mesh.indices.size(), GL_UNSIGNED_INT, 0);
+                }
+            }
+        }
+        glCullFace(GL_BACK);
+
         // (2) render objects in the scene!
-            // framebuffer : default frame buffer(0)
-            // shader : shader_lighting.fs/vs
+        // framebuffer : default frame buffer(0)
+        // shader : shader_lighting.fs/vs
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
         lightingShader.use();
         lightingShader.setMat4("view", view);
         lightingShader.setMat4("projection", projection);
+        lightingShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
         lightingShader.setVec3("light.dir", sun.lightDir);
         lightingShader.setVec3("light.color", sun.lightColor);
         lightingShader.setMat4("viewPos", view);
+        lightingShader.setFloat("useShadow", useShadow);
+        lightingShader.setFloat("useLighting", useLighting);
+        lightingShader.setFloat("usePCF", usePCF);
+        lightingShader.setFloat("useCSM", useCSM);
 
-        map<Model*, vector<Entity*>>::iterator it;
         for (it = scene.entities.begin(); it != scene.entities.end(); it++)
         {
             for (int i = 0; i < it->second.size(); i++)
@@ -234,10 +301,11 @@ int main()
                 // printf ("Rendering VAO %d, iter %d.\n", it->first->VAO, i);
                 lightingShader.setFloat("useNormalMap", it->first->normal? useNormalMap : 0);
                 lightingShader.setFloat("useSpecularMap", it->first->specular? useSpecular : 0);
-                lightingShader.setFloat("useShadow", useShadow);
-                lightingShader.setFloat("useLighting", useLighting);
+                
 
                 it->first->bind();
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, depth.ID);
                 lightingShader.setMat4("world", it->second[i]->getModelMatrix());
                 glDrawElements(GL_TRIANGLES, it->first->mesh.indices.size(), GL_UNSIGNED_INT, 0);
             }
@@ -245,10 +313,6 @@ int main()
 
         // Iterate using map<Model*, vector<Entity*>>::iterator it = scene.entities.begin()
 
-
-
-        
-        
         // use skybox Shader
         skyboxShader.use();
         glDepthFunc(GL_LEQUAL);
@@ -264,6 +328,15 @@ int main()
 
         glBindVertexArray(0);
         glDepthFunc(GL_LESS);
+
+        // render Depth map to quad for visual debugging
+        // ---------------------------------------------
+        debugDepthQuad.use();
+        debugDepthQuad.setFloat("near_plane", 0.1);
+        debugDepthQuad.setFloat("far_plane", 50.0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, depth.ID);
+        // renderQuad();
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -306,6 +379,10 @@ void processInput(GLFWwindow* window, DirectionalLight* sun)
             useShadow = (useShadow == 1.0f)? 0.0f : 1.0f;
         if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
             useLighting = (useLighting == 1.0f)? 0.0f : 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+            usePCF = (usePCF == 1.0f)? 0.0f : 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)
+            useCSM = (useCSM == 1.0f)? 0.0f : 1.0f;
             
     }
 

@@ -1,0 +1,23 @@
+2016-12781 박종석
+그래픽스 프로그래밍 HW4 보고서
+
+Prob 0.
+Free3d의 펭귄 모델을 다운로드하여 임포트하였다. (링크: https://free3d.com/3d-model/penguin-v2--128210.html)
+
+Prob 1.
+LearnOpenGL 코드를 참고하여 광원 위치, 표면의 노멀 벡터등에 따라 다른 FragColor를 갖도록 Phong Illumination을 구현하였다.
+
+Prob 2.
+버텍스 쉐이더에서 Assimp의 tangent 결과와 normal 값을 이용하여 bitangent를 구한 후 TBN matrix를 만들어 프래그먼트 쉐이더로 넘겼다.
+프래그먼트 쉐이더에서 TBN과 노멀맵 값을 곱하여 world에서의 노말 벡터를 구하고, 이를 Prob1의 Phong Illumination에 사용하도록 했다.
+
+Prob 3.
+Sun(광원)의 view와 Projection matrix를 이용하여 광원 관점에서 scene을 렌더링하고, 광원에서의 가장 가까운 depth정보를 프레임버퍼에 텍스처로 기록하였다.
+이 정보를 실제 Scene렌더링 (lightingShader렌더링)에서 불러와 현재 렌더링하는 프래그먼트의 광원 관점에서의 depth가 가장 저장되어있던 가까운 depth보다 큰 지 비교하고,
+크다면 가장 가까운 물체 뒤를 렌더링하고 있다는 뜻이므로, shadow 값을 1로 설정했다. 이를 ambient를 제외한 나머지 빛에 계수로 곱해, 그림자 효과를 구현하였다.
+
+Prob 4.
+PCF 토글을 4번 키에 할당하였다. Stratified Poisson Sampling을 위해 Poisson Disk를 추가하고, random함수를 통해 총 12번의 샘플링을 하여 평균치를 shadow 값으로
+삼았다. 이를 통해 shadow edge에 noise와 low-pass filter 효과를 추가하고, alising을 효과적으로 제거할 수 있었다.
+
+
