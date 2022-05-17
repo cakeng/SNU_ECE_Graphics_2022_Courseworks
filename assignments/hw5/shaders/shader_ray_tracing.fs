@@ -110,7 +110,7 @@ Sphere spheres[] = Sphere[](
 );
 
 Box boxes[] = Box[](
-  //Box(vec3(0,0,0), vec3(0.5,1,0.5), dielectric),
+  Box(vec3(0,0,0), vec3(0.5,1,0.5), material_dielectric_glass),
   Box(vec3(2,0,-3), vec3(3,1,-2), material_box)
 );
 
@@ -153,7 +153,8 @@ float min3 (vec3 v) {
 }
 
 float drand48(vec2 co) {
-  return 2 * fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453) - 1;
+    float result = 2 * fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453) - 1;
+  return result;
 }
 
 vec3 random_in_unit_disk(vec2 co) {
@@ -194,7 +195,7 @@ Ray getRay(vec2 uv){
     vec3 camera_horizontal  = u *  2 * half_width * focus_dist;
     vec3 camera_vertical  = v * 2 * half_height * focus_dist;
 
-    vec3 rd = camera_lens_radius * random_in_unit_disk(vec2(s,t)) * 0.05;
+    vec3 rd = camera_lens_radius * random_in_unit_disk(vec2(s,t)) * 0.01;
     vec3 offset = vec3(s * rd.x, t * rd.y, 0);
     return Ray(camera_origin + offset, camera_lower_left_corner + s * camera_horizontal + t * camera_vertical - camera_origin - offset);
 }
@@ -517,7 +518,7 @@ bool refract(in vec3 v, in vec3 n, in float ni_over_nt, out vec3 refracted) {
   }
 }
 
-bool dielectric_scatter(in Material mat, in Ray r, in HitRecord hit, out vec3 attenuation, out Ray scattered) {
+bool dielectric_scatter(in Material mat, in Ray r, in HitRecord hit, out vec3 attenuation, out Ray scattered, int i) {
   vec3 outward_normal;
   vec3 reflected = reflect(r.direction, hit.normal);
   float ni_over_nt;
@@ -540,15 +541,16 @@ bool dielectric_scatter(in Material mat, in Ray r, in HitRecord hit, out vec3 at
     reflect_prob = 1.0;
   }
 
-  if (drand48(r.direction.xy) < reflect_prob) {
+  if (rand(r.direction.xy*i) < reflect_prob) {
     scattered = Ray(hit.p, reflected);
   } else {
     scattered = Ray(hit.p, refracted);
   }
+//   scattered = Ray(hit.p, refracted);
   return true;
 }
 
-bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray scattered) {
+bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray scattered, int i) {
     attenuation = vec3 (0.0, 0.0, 0.0);
     if (hit.mat.material_type == 0)
     {
@@ -590,22 +592,24 @@ bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray sca
             {
                 diffuse[2] = 0.0;
             }
-            
-            vec3 viewDir = normalize(r.origin - hit.p);
-            vec3 reflectDir = reflect(-lightDir, hit.normal);  
-            float spec = pow(max(dot(viewDir, reflectDir), 0.0), hit.mat.shininess);
-            specular = lightCol * spec * hit.mat.Ks;  
-            if (specular[0] < 0.0f)
+            if (hit.mat.shininess > 0.0)
             {
-                specular[0] = 0.0;
+                vec3 viewDir = normalize(r.origin - hit.p);
+                vec3 reflectDir = reflect(lightDir, hit.normal);  
+                float spec = pow(max(dot(-viewDir, reflectDir), 0.0), hit.mat.shininess);
+                specular = lightCol * hit.mat.Ks * spec ;  
             }
-            if (specular[1] < 0.0f)
+            if (specular.x < 0.0f)
             {
-                specular[1] = 0.0;
+                specular.x = 0.0;
             }
-            if (specular[2] < 0.0f)
+            if (specular.y < 0.0f)
             {
-                specular[2] = 0.0;
+                specular.y = 0.0;
+            }
+            if (specular.z < 0.0f)
+            {
+                specular.z = 0.0;
             }
             if (lights[i].castShadow)
             {
@@ -623,7 +627,7 @@ bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray sca
     }
     else
     {
-        return dielectric_scatter(hit.mat, r, hit, attenuation, scattered);
+        return dielectric_scatter(hit.mat, r, hit, attenuation, scattered, i);
     }
     
 //   if(hit.mat.scatter_function == mat_dielectric) {
@@ -636,9 +640,9 @@ bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray sca
     return true;
 }
 
-const int MAX_DEPTH = 5; // maximum bounce
+const int MAX_DEPTH = 12; // maximum bounce
 
-vec3 castRay(Ray r){
+vec3 castRay(Ray r, int seed){
     // TODO: trace ray in iterative way.
     HitRecord hit;
     vec3 col = vec3(0.0, 0.0, 0.0); /* visible color */
@@ -651,7 +655,7 @@ vec3 castRay(Ray r){
     {
       /* create a new reflected ray */
       Ray scattered;
-      dispatch_scatter(r, hit, colors[bounce], scattered);
+      dispatch_scatter(r, hit, colors[bounce], scattered, seed);
       reflectivity[bounce] = schlick(-dot(normalize(r.direction), normalize(hit.normal)), hit.mat.R0);
         r = scattered;
     } else {
@@ -672,12 +676,12 @@ vec3 castRay(Ray r){
 void main()
 {
     // TODO:
-    const int nsamples = 16;
+    const int nsamples = 64;
     vec3 color = vec3(0);
     for (int i = 0; i < nsamples; i++)
     {
         Ray r = getRay(TexCoords);
-        color += castRay(r);
+        color += castRay(r, i);
     }
     color /= nsamples;
     FragColor = vec4(color, 1.0);
