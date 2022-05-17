@@ -79,7 +79,6 @@ struct Triangle {
     vec3 v0;
     vec3 v1;
     vec3 v2;
-    Material mat;
     // we didn't add material to triangle because it requires so many uniform memory when we use mesh...
 };
 
@@ -109,7 +108,7 @@ Box boxes[] = Box[](
 );
 
 Plane groundPlane = Plane(vec3(0,1,0), vec3(0,0,0), material_ground);
-Triangle mirrorTriangle = Triangle( vec3(-3,0,0), vec3(0,0,-4), vec3(-1, 4, -2), material_gold);
+Triangle mirrorTriangle = Triangle( vec3(-3,0,0), vec3(0,0,-4), vec3(-1, 4, -2));
 
 Light lights[] = Light[](
     Light(vec3(3,5,3), vec3(1,1,1), true),
@@ -181,14 +180,14 @@ Ray getRay(vec2 uv){
     float camera_lens_radius = aperture / 2.0;
 
     vec3 camera_origin = cameraPosition;
-    vec3 w = normalize( cameraFront );
-    vec3 u = normalize( cross(w, vec3 (0.0, 1.0, 0.0)) );
-    vec3 v = cross(u, w);
+    vec3 w = normalize( -cameraFront );
+    vec3 u = normalize( cross(w, vec3 (0.0, -1.0, 0.0)) );
+    vec3 v = -cross(u, w);
     vec3 camera_lower_left_corner = camera_origin - (u * half_width * focus_dist) - (v * half_height * focus_dist) - (w * focus_dist);
     vec3 camera_horizontal  = u *  2 * half_width * focus_dist;
     vec3 camera_vertical  = v * 2 * half_height * focus_dist;
 
-    vec3 rd = camera_lens_radius * random_in_unit_disk(vec2(s,t)) * 0.1;
+    vec3 rd = camera_lens_radius * random_in_unit_disk(vec2(s,t)) * 0.02;
     vec3 offset = vec3(s * rd.x, t * rd.y, 0);
     return Ray(camera_origin + offset, camera_lower_left_corner + s * camera_horizontal + t * camera_vertical - camera_origin - offset);
 }
@@ -239,55 +238,163 @@ bool plane_hit(Plane p, Ray r, float t_min, float t_max, out HitRecord hit){
     return true;
 }
 
-bool box_hit(Box b, Ray r, float t_min, float t_max, out HitRecord hit){
-    // TODO:
-
-
-    return false;
-}
-
 bool triangle_hit(Triangle tri, Ray r, float t_min, float t_max, out HitRecord hit){
     // TODO:
-    vec3 tri_normal = normalize(cross((tri.v0 - tri.v1), (tri.v2 - tri.v1)));
-    if (dot (tri_normal, r.direction) > 0.0)
-    {
-        tri_normal = -tri_normal;
-    }
-    vec3 r1 = r.origin + t_min*r.direction;
-    vec3 r2 = r.origin + t_max*r.direction;
-    float d1 = dot ((r1 - tri.v0), tri_normal);
-    float d2 = dot ((r2 - tri.v0), tri_normal);
-    if (d1*d2 >= 0)
-    {
-        return false;
-    }
-    if (d1 == d2)
-    {
-        return false;
-    }
-    vec3 intersect = r1 + (r2-r1) * (-d1/(d2-d1));
-    vec3 test = normalize(cross(tri_normal, tri.v1 - tri.v0));
-    if (dot (test, intersect - tri.v0) < 0.0)
-    {
-        return false;
-    }
-    test = normalize(cross(tri_normal, tri.v2 - tri.v1));
-    if (dot (test, intersect - tri.v1) < 0.0)
-    {
-        return false;
-    }
-    test = normalize(cross(tri_normal, tri.v0 - tri.v2));
-    if (dot (test, intersect - tri.v2) < 0.0)
-    {
-        return false;
-    }
+    //https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution
+    vec3 v0 = tri.v0;
+    vec3 v1 = tri.v1;
+    vec3 v2 = tri.v2;
+    vec3 orig = r.origin;
+    vec3 dir = r.direction;
 
-    hit.t = dot (r.direction, intersect - r.origin);
-    hit.p = intersect;
-    hit.normal = tri_normal;
-    hit.mat = tri.mat;
+    vec3 v0v1 = v1 - v0; 
+    vec3 v0v2 = v2 - v0; 
+    // no need to normalize
+    vec3 N = cross(v0v1, v0v2);  //N 
+ 
+    // Step 1: finding P
+ 
+    // check if ray and plane are parallel ?
+    float NdotRayDirection = dot(N, dir); 
+    if (abs(NdotRayDirection) < 0.0001)  //almost 0 
+        return false;  //they are parallel so they don't intersect ! 
+ 
+    // compute d parameter using equation 2
+    float d = -dot(N, v0); 
+ 
+    // compute t (equation 3)
+    float t = -(dot(N, orig) + d) / NdotRayDirection; 
+ 
+    // check if the triangle is in behind the ray
+    if (t < 0) return false;  //the triangle is behind 
+ 
+    // compute the intersection point using equation 1
+    vec3 P = orig + t * dir; 
+
+    if (t < t_min || t > t_max) return false;
+ 
+    // Step 2: inside-outside test
+    vec3 C;  //vector perpendicular to triangle's plane 
+ 
+    // edge 0
+    vec3 edge0 = v1 - v0; 
+    vec3 vp0 = P - v0; 
+    C = cross(edge0, vp0); 
+    if (dot(N, C) < 0) return false;  //P is on the right side 
+ 
+    // edge 1
+    vec3 edge1 = v2 - v1; 
+    vec3 vp1 = P - v1; 
+    C = cross(edge1, vp1); 
+    if (dot(N, C) < 0)  return false;  //P is on the right side 
+ 
+    // edge 2
+    vec3 edge2 = v0 - v2; 
+    vec3 vp2 = P - v2; 
+    C = cross(edge2, vp2); 
+    if (dot(N, C) < 0) return false;  //P is on the right side; 
+
+    hit.t = t;
+    hit.p = P;
+    hit.normal = N;
     return true;
 }
+
+bool box_hit(Box b, Ray r, float t_min, float t_max, out HitRecord hit){
+    // TODO:
+    vec3 p0 = b.box_min;
+    vec3 p7 = b.box_max;
+    vec3 p1 = b.box_min + vec3(b.box_max.x - b.box_min.x, 0.0, 0.0);
+    vec3 p2 = b.box_min + vec3(0.0, b.box_max.y - b.box_min.y, 0.0);
+    vec3 p3 = b.box_min + vec3(0.0, 0.0, b.box_max.z - b.box_min.z);
+    vec3 p4 = b.box_min + vec3(b.box_max.x - b.box_min.x, b.box_max.y - b.box_min.y, 0.0);
+    vec3 p5 = b.box_min + vec3(0.0, b.box_max.y - b.box_min.y, b.box_max.z - b.box_min.z);
+    vec3 p6 = b.box_min + vec3(b.box_max.x - b.box_min.x, 0.0, b.box_max.z - b.box_min.z);
+    
+    Triangle tri0 = Triangle(p0, p1, p2);
+    Triangle tri1 = Triangle(p1, p2, p4);
+    Triangle tri2 = Triangle(p0, p1, p3);
+    Triangle tri3 = Triangle(p6, p1, p3);
+    Triangle tri4 = Triangle (p0, p2, p3);
+    Triangle tri5 = Triangle (p5, p2, p3);
+    Triangle tri6 = Triangle (p7, p4, p5);
+    Triangle tri7 = Triangle (p2, p4, p5);
+    Triangle tri8 = Triangle (p7, p4, p6);
+    Triangle tri9 = Triangle (p1, p4, p6);
+
+    Triangle tri10 = Triangle(p7, p5, p6);
+    Triangle tri11 = Triangle(p3, p5, p6);
+
+    bool result = false;
+    float temp_max = t_max;
+    if (triangle_hit (tri0, r, t_min, temp_max, hit))
+    {
+        temp_max = hit.t;
+        result = true;
+    }
+    if (triangle_hit (tri1, r, t_min, temp_max, hit))
+    {
+        temp_max = hit.t;
+        result = true;
+    }
+    if (triangle_hit (tri2, r, t_min, temp_max, hit))
+    {
+        temp_max = hit.t;
+        result = true;
+    }
+    if (triangle_hit (tri3, r, t_min, temp_max, hit))
+    {
+        temp_max = hit.t;
+        result = true;
+    }
+    if (triangle_hit (tri4, r, t_min, temp_max, hit))
+    {
+        temp_max = hit.t;
+        result = true;
+    }
+    if (triangle_hit (tri5, r, t_min, temp_max, hit))
+    {
+        temp_max = hit.t;
+        result = true;
+    }
+    if (triangle_hit (tri6, r, t_min, temp_max, hit))
+    {
+        temp_max = hit.t;
+        result = true;
+    }
+    if (triangle_hit (tri7, r, t_min, temp_max, hit))
+    {
+        temp_max = hit.t;
+        result = true;
+    }
+    if (triangle_hit (tri8, r, t_min, temp_max, hit))
+    {
+        temp_max = hit.t;
+        result = true;
+    }
+    if (triangle_hit (tri9, r, t_min, temp_max, hit))
+    {
+        temp_max = hit.t;
+        result = true;
+    }
+    if (triangle_hit (tri10, r, t_min, temp_max, hit))
+    {
+        temp_max = hit.t;
+        result = true;
+    }
+    if (triangle_hit (tri11, r, t_min, temp_max, hit))
+    {
+        temp_max = hit.t;
+        result = true;
+    }
+
+    if (result)
+    {
+        hit.mat = b.mat;
+    }
+    return result;
+}
+
 
 float schlick(float cosine, float r0) {
     // TODO:
@@ -302,6 +409,28 @@ vec3 schlick(float cosine, vec3 r0) {
 }
 
 bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray scattered) {
+    attenuation = vec3 (0.0, 0.0, 0.0);
+    for (int i = 0; i < lights.length(); i++)
+    {
+        float shadow = 0.0f;
+
+        vec3 lightDir = normalize(lights[i].position - hit.normal);
+        vec3 lightCol = lights[i].color;
+
+        vec3 ambient = lightCol * 0.3 * hit.mat.Ka;
+
+        float diff = max(dot(hit.normal, lightDir), 0.0);
+        vec3 diffuse = lightCol * diff * hit.mat.Kd; 
+        
+        vec3 viewDir = normalize(r.origin - hit.p);
+        vec3 reflectDir = reflect(lightDir, hit.normal);  
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), hit.mat.shininess);
+        vec3 specular = lightCol * spec * hit.mat.Ks;  
+
+        attenuation += ambient + (1.0 - shadow) * (diffuse + specular);
+    }
+
+    
 //   if(hit.mat.scatter_function == mat_dielectric) {
 //     return dielectric_scatter(hit.mat, r, hit, attenuation, scattered);
 //   } else if (hit.mat.scatter_function == mat_metal) {
@@ -309,8 +438,6 @@ bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray sca
 //   } else {
 //     return lambertian_scatter(hit.mat, r, hit, attenuation, scattered);
 //   }
-    attenuation = hit.mat.Kd;
-    scattered = r;
     return true;
 }
 
@@ -319,7 +446,12 @@ bool trace(Ray r, float t_min, float t_max, out HitRecord hit){
     HitRecord temp_hit;
     bool hit_anything = false;
     float closest_so_far = t_max;
-
+    
+    if (triangle_hit(mirrorTriangle, r, t_min, closest_so_far, temp_hit)) {
+        hit_anything = true;
+        hit = temp_hit;
+        closest_so_far = temp_hit.t;
+    }
     for (int i = 0; i < spheres.length(); i++) {
         if (sphere_hit(spheres[i], r, t_min, closest_so_far, temp_hit)) {
         hit_anything = true;
@@ -334,16 +466,13 @@ bool trace(Ray r, float t_min, float t_max, out HitRecord hit){
         closest_so_far = temp_hit.t;
         }
     }
+    
     if (plane_hit(groundPlane, r, t_min, closest_so_far, temp_hit)) {
         hit_anything = true;
         hit = temp_hit;
         closest_so_far = temp_hit.t;
     }
-    if (triangle_hit(mirrorTriangle, r, t_min, closest_so_far, temp_hit)) {
-        hit_anything = true;
-        hit = temp_hit;
-        closest_so_far = temp_hit.t;
-    }
+    
     return hit_anything;
 }
 

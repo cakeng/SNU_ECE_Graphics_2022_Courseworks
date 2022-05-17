@@ -178,9 +178,14 @@ int main()
     rayTracingShader.setFloat("material_gold.shininess", 200);
     rayTracingShader.setVec3("material_gold.R0", glm::vec3(0.8, 0.6, 0.2));
 
-
+    float oldTime = 0;
     while (!glfwWindowShouldClose(window))// render loop
     {
+
+        float currentTime = glfwGetTime();
+        float dt = currentTime - oldTime;
+        deltaTime = dt;
+        oldTime = currentTime;
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
