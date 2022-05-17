@@ -179,6 +179,7 @@ int main()
     rayTracingShader.setVec3("material_gold.R0", glm::vec3(0.8, 0.6, 0.2));
 
     float oldTime = 0;
+    float printTime = 0;
     while (!glfwWindowShouldClose(window))// render loop
     {
 
@@ -186,6 +187,12 @@ int main()
         float dt = currentTime - oldTime;
         deltaTime = dt;
         oldTime = currentTime;
+        if (currentTime > printTime + 0.2)
+        {
+            printTime = currentTime;
+            printf ("FPS: %2.1f\n", 1.0f/deltaTime);
+        }
+        
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 

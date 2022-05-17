@@ -7,7 +7,7 @@ in vec2 TexCoords;
 // You can change the code whatever you want
 
 
-const int MAX_DEPTH = 4; // maximum bounce
+
 uniform samplerCube environmentMap;
 
 
@@ -73,6 +73,13 @@ struct Box {
     vec3 box_min;
     vec3 box_max;
     Material mat;
+};
+
+struct Square {
+    vec3 v0;
+    vec3 v1;
+    vec3 v2;
+    vec3 v3;
 };
 
 struct Triangle {
@@ -187,7 +194,7 @@ Ray getRay(vec2 uv){
     vec3 camera_horizontal  = u *  2 * half_width * focus_dist;
     vec3 camera_vertical  = v * 2 * half_height * focus_dist;
 
-    vec3 rd = camera_lens_radius * random_in_unit_disk(vec2(s,t)) * 0.02;
+    vec3 rd = camera_lens_radius * random_in_unit_disk(vec2(s,t)) * 0.12;
     vec3 offset = vec3(s * rd.x, t * rd.y, 0);
     return Ray(camera_origin + offset, camera_lower_left_corner + s * camera_horizontal + t * camera_vertical - camera_origin - offset);
 }
@@ -229,7 +236,7 @@ bool sphere_hit(Sphere sp, Ray r, float t_min, float t_max, out HitRecord hit){
 
 bool plane_hit(Plane p, Ray r, float t_min, float t_max, out HitRecord hit){
     // TODO:
-    float t = (-0.5 - r.origin.y) / r.direction.y;
+    float t = (p.p0.y - r.origin.y) / r.direction.y;
     if (t < t_min || t > t_max) return false;
     hit.t = t;
     hit.p = point_at_parameter(r, t);
@@ -297,6 +304,83 @@ bool triangle_hit(Triangle tri, Ray r, float t_min, float t_max, out HitRecord h
     hit.t = t;
     hit.p = P;
     hit.normal = N;
+    if (dot (N, dir) > 0.0)
+    {
+        hit.normal = -N;
+    }
+    return true;
+}
+
+bool square_hit(Square tri, Ray r, float t_min, float t_max, out HitRecord hit){
+    // TODO:
+    //https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution
+    vec3 v0 = tri.v0;
+    vec3 v1 = tri.v1;
+    vec3 v2 = tri.v2;
+    vec3 v3 = tri.v3;
+    vec3 orig = r.origin;
+    vec3 dir = r.direction;
+
+    vec3 v0v1 = v1 - v0; 
+    vec3 v0v2 = v2 - v0; 
+    // no need to normalize
+    vec3 N = cross(v0v1, v0v2);  //N 
+ 
+    // Step 1: finding P
+ 
+    // check if ray and plane are parallel ?
+    float NdotRayDirection = dot(N, dir); 
+    if (abs(NdotRayDirection) < 0.0001)  //almost 0 
+        return false;  //they are parallel so they don't intersect ! 
+ 
+    // compute d parameter using equation 2
+    float d = -dot(N, v0); 
+ 
+    // compute t (equation 3)
+    float t = -(dot(N, orig) + d) / NdotRayDirection; 
+ 
+    // check if the triangle is in behind the ray
+    if (t < 0) return false;  //the triangle is behind 
+ 
+    // compute the intersection point using equation 1
+    vec3 P = orig + t * dir; 
+
+    if (t < t_min || t > t_max) return false;
+ 
+    // Step 2: inside-outside test
+    vec3 C;  //vector perpendicular to triangle's plane 
+ 
+    // edge 0
+    vec3 edge0 = v1 - v0; 
+    vec3 vp0 = P - v0; 
+    C = cross(edge0, vp0); 
+    if (dot(N, C) < 0) return false;  //P is on the right side 
+ 
+    // edge 1
+    vec3 edge1 = v2 - v1; 
+    vec3 vp1 = P - v1; 
+    C = cross(edge1, vp1); 
+    if (dot(N, C) < 0)  return false;  //P is on the right side 
+ 
+    // edge 2
+    vec3 edge2 = v3 - v2; 
+    vec3 vp2 = P - v2; 
+    C = cross(edge2, vp2); 
+    if (dot(N, C) < 0) return false;  //P is on the right side; 
+
+    // edge 3
+    vec3 edge3 = v0 - v3; 
+    vec3 vp3 = P - v3; 
+    C = cross(edge3, vp3); 
+    if (dot(N, C) < 0) return false;  //P is on the right side; 
+
+    hit.t = t;
+    hit.p = P;
+    hit.normal = N;
+    if (dot (N, dir) > 0.0)
+    {
+        hit.normal = -N;
+    }
     return true;
 }
 
@@ -310,80 +394,51 @@ bool box_hit(Box b, Ray r, float t_min, float t_max, out HitRecord hit){
     vec3 p4 = b.box_min + vec3(b.box_max.x - b.box_min.x, b.box_max.y - b.box_min.y, 0.0);
     vec3 p5 = b.box_min + vec3(0.0, b.box_max.y - b.box_min.y, b.box_max.z - b.box_min.z);
     vec3 p6 = b.box_min + vec3(b.box_max.x - b.box_min.x, 0.0, b.box_max.z - b.box_min.z);
-    
-    Triangle tri0 = Triangle(p0, p1, p2);
-    Triangle tri1 = Triangle(p1, p2, p4);
-    Triangle tri2 = Triangle(p0, p1, p3);
-    Triangle tri3 = Triangle(p6, p1, p3);
-    Triangle tri4 = Triangle (p0, p2, p3);
-    Triangle tri5 = Triangle (p5, p2, p3);
-    Triangle tri6 = Triangle (p7, p4, p5);
-    Triangle tri7 = Triangle (p2, p4, p5);
-    Triangle tri8 = Triangle (p7, p4, p6);
-    Triangle tri9 = Triangle (p1, p4, p6);
 
-    Triangle tri10 = Triangle(p7, p5, p6);
-    Triangle tri11 = Triangle(p3, p5, p6);
+    Square sq0 = Square (p0, p1, p4, p2);
+    Square sq1 = Square (p0, p1, p6, p3);
+    Square sq2 = Square (p0, p2, p5, p3);
+    Square sq3 = Square (p1, p4, p7, p6);
+    Square sq4 = Square (p2, p4, p7, p5);
+    Square sq5 = Square (p3, p5, p7, p6);
 
     bool result = false;
     float temp_max = t_max;
-    if (triangle_hit (tri0, r, t_min, temp_max, hit))
+    HitRecord temp_hit;
+
+    if (square_hit (sq0, r, t_min, temp_max, temp_hit))
     {
+        hit = temp_hit;
         temp_max = hit.t;
         result = true;
     }
-    if (triangle_hit (tri1, r, t_min, temp_max, hit))
+    if (square_hit (sq1, r, t_min, temp_max, temp_hit))
     {
+        hit = temp_hit;
         temp_max = hit.t;
         result = true;
     }
-    if (triangle_hit (tri2, r, t_min, temp_max, hit))
+    if (square_hit (sq2, r, t_min, temp_max, temp_hit))
     {
+        hit = temp_hit;
         temp_max = hit.t;
         result = true;
     }
-    if (triangle_hit (tri3, r, t_min, temp_max, hit))
+    if (square_hit (sq3, r, t_min, temp_max, temp_hit))
     {
+        hit = temp_hit;
         temp_max = hit.t;
         result = true;
     }
-    if (triangle_hit (tri4, r, t_min, temp_max, hit))
+    if (square_hit (sq4, r, t_min, temp_max, temp_hit))
     {
+        hit = temp_hit;
         temp_max = hit.t;
         result = true;
     }
-    if (triangle_hit (tri5, r, t_min, temp_max, hit))
+    if (square_hit (sq5, r, t_min, temp_max, temp_hit))
     {
-        temp_max = hit.t;
-        result = true;
-    }
-    if (triangle_hit (tri6, r, t_min, temp_max, hit))
-    {
-        temp_max = hit.t;
-        result = true;
-    }
-    if (triangle_hit (tri7, r, t_min, temp_max, hit))
-    {
-        temp_max = hit.t;
-        result = true;
-    }
-    if (triangle_hit (tri8, r, t_min, temp_max, hit))
-    {
-        temp_max = hit.t;
-        result = true;
-    }
-    if (triangle_hit (tri9, r, t_min, temp_max, hit))
-    {
-        temp_max = hit.t;
-        result = true;
-    }
-    if (triangle_hit (tri10, r, t_min, temp_max, hit))
-    {
-        temp_max = hit.t;
-        result = true;
-    }
-    if (triangle_hit (tri11, r, t_min, temp_max, hit))
-    {
+        hit = temp_hit;
         temp_max = hit.t;
         result = true;
     }
@@ -408,39 +463,6 @@ vec3 schlick(float cosine, vec3 r0) {
     return vec3 (0.0, 0.0, 0.0);
 }
 
-bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray scattered) {
-    attenuation = vec3 (0.0, 0.0, 0.0);
-    for (int i = 0; i < lights.length(); i++)
-    {
-        float shadow = 0.0f;
-
-        vec3 lightDir = normalize(lights[i].position - hit.normal);
-        vec3 lightCol = lights[i].color;
-
-        vec3 ambient = lightCol * 0.3 * hit.mat.Ka;
-
-        float diff = max(dot(hit.normal, lightDir), 0.0);
-        vec3 diffuse = lightCol * diff * hit.mat.Kd; 
-        
-        vec3 viewDir = normalize(r.origin - hit.p);
-        vec3 reflectDir = reflect(lightDir, hit.normal);  
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), hit.mat.shininess);
-        vec3 specular = lightCol * spec * hit.mat.Ks;  
-
-        attenuation += ambient + (1.0 - shadow) * (diffuse + specular);
-    }
-
-    
-//   if(hit.mat.scatter_function == mat_dielectric) {
-//     return dielectric_scatter(hit.mat, r, hit, attenuation, scattered);
-//   } else if (hit.mat.scatter_function == mat_metal) {
-//     return metal_scatter(hit.mat, r, hit, attenuation, scattered);
-//   } else {
-//     return lambertian_scatter(hit.mat, r, hit, attenuation, scattered);
-//   }
-    return true;
-}
-
 bool trace(Ray r, float t_min, float t_max, out HitRecord hit){
     // TODO: trace single ray.
     HitRecord temp_hit;
@@ -450,6 +472,7 @@ bool trace(Ray r, float t_min, float t_max, out HitRecord hit){
     if (triangle_hit(mirrorTriangle, r, t_min, closest_so_far, temp_hit)) {
         hit_anything = true;
         hit = temp_hit;
+        hit.mat = material_mirror;
         closest_so_far = temp_hit.t;
     }
     for (int i = 0; i < spheres.length(); i++) {
@@ -476,32 +499,115 @@ bool trace(Ray r, float t_min, float t_max, out HitRecord hit){
     return hit_anything;
 }
 
+bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray scattered) {
+    attenuation = vec3 (0.0, 0.0, 0.0);
+    for (int i = 0; i < lights.length(); i++)
+    {
+        float shadow = 0.0f;
+
+        vec3 lightDir = normalize(lights[i].position - hit.p);
+        vec3 lightCol = lights[i].color;
+
+        vec3 ambient = lightCol * 0.3 * hit.mat.Ka;
+        vec3 specular = vec3 (0.0, 0.0, 0.0);
+        vec3 diffuse = vec3 (0.0, 0.0, 0.0);
+
+        if (ambient[0] < 0.0f)
+        {
+            ambient[0] = 0.0;
+        }
+        if (ambient[1] < 0.0f)
+        {
+            ambient[1] = 0.0;
+        }
+        if (ambient[2] < 0.0f)
+        {
+            ambient[2] = 0.0;
+        }
+
+        float diff = max(dot(hit.normal, lightDir), 0.0);
+        diffuse = lightCol * diff * hit.mat.Kd; 
+        if (diffuse[0] < 0.0f)
+        {
+            diffuse[0] = 0.0;
+        }
+        if (diffuse[1] < 0.0f)
+        {
+            diffuse[1] = 0.0;
+        }
+        if (diffuse[2] < 0.0f)
+        {
+            diffuse[2] = 0.0;
+        }
+        
+        vec3 viewDir = normalize(r.origin - hit.p);
+        vec3 reflectDir = reflect(-lightDir, hit.normal);  
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), hit.mat.shininess);
+        specular = lightCol * spec * hit.mat.Ks;  
+        if (specular[0] < 0.0f)
+        {
+            specular[0] = 0.0;
+        }
+        if (specular[1] < 0.0f)
+        {
+            specular[1] = 0.0;
+        }
+        if (specular[2] < 0.0f)
+        {
+            specular[2] = 0.0;
+        }
+        if (lights[i].castShadow)
+        {
+            Ray shadowRay = Ray (hit.p, lightDir);
+            HitRecord shadowRec;
+            if (trace (shadowRay, 0.01, 99, shadowRec))
+            {
+                shadow = 1.0;
+            }
+        }
+        attenuation += ambient + (1.0 - shadow) * (diffuse + specular);
+    }
+    scattered.origin = hit.p;
+    scattered.direction = reflect(r.direction, hit.normal);  
+//   if(hit.mat.scatter_function == mat_dielectric) {
+//     return dielectric_scatter(hit.mat, r, hit, attenuation, scattered);
+//   } else if (hit.mat.scatter_function == mat_metal) {
+//     return metal_scatter(hit.mat, r, hit, attenuation, scattered);
+//   } else {
+//     return lambertian_scatter(hit.mat, r, hit, attenuation, scattered);
+//   }
+    return true;
+}
+
+const int MAX_DEPTH = 4; // maximum bounce
+
 vec3 castRay(Ray r){
     // TODO: trace ray in iterative way.
     HitRecord hit;
-    vec3 col = vec3(0.2, 0.1, 0.2); /* visible color */
-    vec3 total_attenuation = vec3(1.0, 1.0, 1.0); /* reduction of light transmission */
+    vec3 col = vec3(0.0, 0.0, 0.0); /* visible color */
+    vec3 reflectivity [MAX_DEPTH];
+    vec3 colors [MAX_DEPTH];
+    int bounce = 0;
+  for (; bounce < MAX_DEPTH ; bounce++) {
 
-  for (int bounce = 0; bounce < 1; bounce++) {
-
-    if (trace(r, bias, 1.0 / 0.0, hit)) {
+    if (trace(r, bias, 1.0 / 0.0, hit)) 
+    {
       /* create a new reflected ray */
       Ray scattered;
-      vec3 local_attenuation;
-      if (dispatch_scatter(r, hit, local_attenuation, scattered)) {
-        total_attenuation *= local_attenuation;
+      dispatch_scatter(r, hit, colors[bounce], scattered);
+      reflectivity[bounce] = hit.mat.R0;
         r = scattered;
-        col = total_attenuation;
-      } else {
-        total_attenuation *= vec3(0,0,0);
-      }
     } else {
       /* background hit (light source) */
       vec3 unit_dir = normalize(r.direction);
       float t = 0.5 * (unit_dir.y + 1.0);
-      col = total_attenuation * ((1.0-t)*vec3(1.0,1.0,1.0)+t*vec3(0.5,0.7,1.0));
-      break;
+      colors[bounce] = ((1.0-t)*vec3(1.0,1.0,1.0)+t*vec3(0.5,0.7,1.0));
+      reflectivity[bounce] = vec3(0.0);
     }
+  }
+  for (int i = MAX_DEPTH-1; i >= 0; i--)
+  {
+      col = col*reflectivity[i] + colors[i]*(vec3(1.0)-reflectivity[i]);
   }
   return col;
 }
