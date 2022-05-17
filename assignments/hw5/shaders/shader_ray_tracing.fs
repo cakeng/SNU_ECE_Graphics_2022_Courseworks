@@ -106,7 +106,7 @@ Sphere spheres[] = Sphere[](
   Sphere(vec3(1,0.5,-1), 0.5, material_gold),
   Sphere(vec3(-1,0.5,-1), 0.5, material_gold),
   Sphere(vec3(0,0.5,1), 0.5, material_lambert),
-  Sphere(vec3(1,0.5,0), 0.5, material_lambert)
+  Sphere(vec3(1,0.5,0), 0.5, material_dielectric_glass)
 );
 
 Box boxes[] = Box[](
@@ -194,7 +194,7 @@ Ray getRay(vec2 uv){
     vec3 camera_horizontal  = u *  2 * half_width * focus_dist;
     vec3 camera_vertical  = v * 2 * half_height * focus_dist;
 
-    vec3 rd = camera_lens_radius * random_in_unit_disk(vec2(s,t)) * 0.12;
+    vec3 rd = camera_lens_radius * random_in_unit_disk(vec2(s,t)) * 0.05;
     vec3 offset = vec3(s * rd.x, t * rd.y, 0);
     return Ray(camera_origin + offset, camera_lower_left_corner + s * camera_horizontal + t * camera_vertical - camera_origin - offset);
 }
@@ -442,7 +442,7 @@ bool box_hit(Box b, Ray r, float t_min, float t_max, out HitRecord hit){
         temp_max = hit.t;
         result = true;
     }
-
+    
     if (result)
     {
         hit.mat = b.mat;
@@ -450,17 +450,23 @@ bool box_hit(Box b, Ray r, float t_min, float t_max, out HitRecord hit){
     return result;
 }
 
+float schlick_ior(in float cosine, in float ref_idx) {
+  float r0 = (1 - ref_idx) / (1 + ref_idx);
+  r0 = r0 * r0;
+  return r0 + (1 - r0) * pow((1 - cosine), 5);
+}
 
-float schlick(float cosine, float r0) {
-    // TODO:
 
-    return 0.0;
+float schlick(in float cosine, in float r0) {
+//   float r0 = (1 - ref_idx) / (1 + ref_idx);
+//   r0 = r0 * r0;
+  return r0 + (1 - r0) * pow((1 - cosine), 5);
 }
 
 vec3 schlick(float cosine, vec3 r0) {
     // TODO:
 
-    return vec3 (0.0, 0.0, 0.0);
+    return vec3 (schlick(cosine, r0.x), schlick(cosine, r0.y), schlick(cosine, r0.z));
 }
 
 bool trace(Ray r, float t_min, float t_max, out HitRecord hit){
@@ -469,12 +475,7 @@ bool trace(Ray r, float t_min, float t_max, out HitRecord hit){
     bool hit_anything = false;
     float closest_so_far = t_max;
     
-    if (triangle_hit(mirrorTriangle, r, t_min, closest_so_far, temp_hit)) {
-        hit_anything = true;
-        hit = temp_hit;
-        hit.mat = material_mirror;
-        closest_so_far = temp_hit.t;
-    }
+    
     for (int i = 0; i < spheres.length(); i++) {
         if (sphere_hit(spheres[i], r, t_min, closest_so_far, temp_hit)) {
         hit_anything = true;
@@ -495,80 +496,136 @@ bool trace(Ray r, float t_min, float t_max, out HitRecord hit){
         hit = temp_hit;
         closest_so_far = temp_hit.t;
     }
-    
+    if (triangle_hit(mirrorTriangle, r, t_min, closest_so_far, temp_hit)) {
+        hit_anything = true;
+        hit = temp_hit;
+        hit.mat = material_mirror;
+        closest_so_far = temp_hit.t;
+    }
     return hit_anything;
+}
+
+bool refract(in vec3 v, in vec3 n, in float ni_over_nt, out vec3 refracted) {
+  vec3 uv = normalize(v);
+  float dt = dot(uv, n);
+  float discriminant = 1.0 - ni_over_nt * ni_over_nt * (1 - dt * dt);
+  if (discriminant > 0) {
+    refracted = ni_over_nt * (uv - n * dt) - n * sqrt(discriminant);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool dielectric_scatter(in Material mat, in Ray r, in HitRecord hit, out vec3 attenuation, out Ray scattered) {
+  vec3 outward_normal;
+  vec3 reflected = reflect(r.direction, hit.normal);
+  float ni_over_nt;
+  attenuation = vec3(0.0, 0.0, 0.0);
+  vec3 refracted;
+  float reflect_prob;
+  float cosine;
+  if (dot(r.direction, hit.normal) > 0) {
+    outward_normal = - hit.normal;
+    ni_over_nt = mat.ior;
+    cosine = mat.ior * dot(r.direction, hit.normal) / length(r.direction);
+  } else {
+    outward_normal = hit.normal;
+    ni_over_nt = 1.0 / mat.ior;
+    cosine = - dot(r.direction, hit.normal) / length(r.direction);
+  }
+  if (refract(r.direction, outward_normal, ni_over_nt, refracted)) {
+    reflect_prob = schlick_ior(cosine, mat.ior);
+  } else {
+    reflect_prob = 1.0;
+  }
+
+  if (drand48(r.direction.xy) < reflect_prob) {
+    scattered = Ray(hit.p, reflected);
+  } else {
+    scattered = Ray(hit.p, refracted);
+  }
+  return true;
 }
 
 bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray scattered) {
     attenuation = vec3 (0.0, 0.0, 0.0);
-    for (int i = 0; i < lights.length(); i++)
+    if (hit.mat.material_type == 0)
     {
-        float shadow = 0.0f;
+        for (int i = 0; i < lights.length(); i++)
+        {
+            float shadow = 0.0f;
 
-        vec3 lightDir = normalize(lights[i].position - hit.p);
-        vec3 lightCol = lights[i].color;
+            vec3 lightDir = normalize(lights[i].position - hit.p);
+            vec3 lightCol = lights[i].color;
 
-        vec3 ambient = lightCol * 0.3 * hit.mat.Ka;
-        vec3 specular = vec3 (0.0, 0.0, 0.0);
-        vec3 diffuse = vec3 (0.0, 0.0, 0.0);
+            vec3 ambient = lightCol * 0.3 * hit.mat.Ka;
+            vec3 specular = vec3 (0.0, 0.0, 0.0);
+            vec3 diffuse = vec3 (0.0, 0.0, 0.0);
 
-        if (ambient[0] < 0.0f)
-        {
-            ambient[0] = 0.0;
-        }
-        if (ambient[1] < 0.0f)
-        {
-            ambient[1] = 0.0;
-        }
-        if (ambient[2] < 0.0f)
-        {
-            ambient[2] = 0.0;
-        }
-
-        float diff = max(dot(hit.normal, lightDir), 0.0);
-        diffuse = lightCol * diff * hit.mat.Kd; 
-        if (diffuse[0] < 0.0f)
-        {
-            diffuse[0] = 0.0;
-        }
-        if (diffuse[1] < 0.0f)
-        {
-            diffuse[1] = 0.0;
-        }
-        if (diffuse[2] < 0.0f)
-        {
-            diffuse[2] = 0.0;
-        }
-        
-        vec3 viewDir = normalize(r.origin - hit.p);
-        vec3 reflectDir = reflect(-lightDir, hit.normal);  
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), hit.mat.shininess);
-        specular = lightCol * spec * hit.mat.Ks;  
-        if (specular[0] < 0.0f)
-        {
-            specular[0] = 0.0;
-        }
-        if (specular[1] < 0.0f)
-        {
-            specular[1] = 0.0;
-        }
-        if (specular[2] < 0.0f)
-        {
-            specular[2] = 0.0;
-        }
-        if (lights[i].castShadow)
-        {
-            Ray shadowRay = Ray (hit.p, lightDir);
-            HitRecord shadowRec;
-            if (trace (shadowRay, 0.01, 99, shadowRec))
+            if (ambient[0] < 0.0f)
             {
-                shadow = 1.0;
+                ambient[0] = 0.0;
             }
+            if (ambient[1] < 0.0f)
+            {
+                ambient[1] = 0.0;
+            }
+            if (ambient[2] < 0.0f)
+            {
+                ambient[2] = 0.0;
+            }
+
+            float diff = max(dot(hit.normal, lightDir), 0.0);
+            diffuse = lightCol * diff * hit.mat.Kd; 
+            if (diffuse[0] < 0.0f)
+            {
+                diffuse[0] = 0.0;
+            }
+            if (diffuse[1] < 0.0f)
+            {
+                diffuse[1] = 0.0;
+            }
+            if (diffuse[2] < 0.0f)
+            {
+                diffuse[2] = 0.0;
+            }
+            
+            vec3 viewDir = normalize(r.origin - hit.p);
+            vec3 reflectDir = reflect(-lightDir, hit.normal);  
+            float spec = pow(max(dot(viewDir, reflectDir), 0.0), hit.mat.shininess);
+            specular = lightCol * spec * hit.mat.Ks;  
+            if (specular[0] < 0.0f)
+            {
+                specular[0] = 0.0;
+            }
+            if (specular[1] < 0.0f)
+            {
+                specular[1] = 0.0;
+            }
+            if (specular[2] < 0.0f)
+            {
+                specular[2] = 0.0;
+            }
+            if (lights[i].castShadow)
+            {
+                Ray shadowRay = Ray (hit.p, lightDir);
+                HitRecord shadowRec;
+                if (trace (shadowRay, 0.01, 99, shadowRec))
+                {
+                    shadow = 1.0;
+                }
+            }
+            attenuation += ambient + (1.0 - shadow) * (diffuse + specular);
         }
-        attenuation += ambient + (1.0 - shadow) * (diffuse + specular);
+        scattered.origin = hit.p;
+        scattered.direction = normalize(reflect(hit.p - r.origin, normalize(hit.normal)));  
     }
-    scattered.origin = hit.p;
-    scattered.direction = reflect(r.direction, hit.normal);  
+    else
+    {
+        return dielectric_scatter(hit.mat, r, hit, attenuation, scattered);
+    }
+    
 //   if(hit.mat.scatter_function == mat_dielectric) {
 //     return dielectric_scatter(hit.mat, r, hit, attenuation, scattered);
 //   } else if (hit.mat.scatter_function == mat_metal) {
@@ -579,7 +636,7 @@ bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray sca
     return true;
 }
 
-const int MAX_DEPTH = 4; // maximum bounce
+const int MAX_DEPTH = 5; // maximum bounce
 
 vec3 castRay(Ray r){
     // TODO: trace ray in iterative way.
@@ -595,13 +652,13 @@ vec3 castRay(Ray r){
       /* create a new reflected ray */
       Ray scattered;
       dispatch_scatter(r, hit, colors[bounce], scattered);
-      reflectivity[bounce] = hit.mat.R0;
+      reflectivity[bounce] = schlick(-dot(normalize(r.direction), normalize(hit.normal)), hit.mat.R0);
         r = scattered;
     } else {
       /* background hit (light source) */
       vec3 unit_dir = normalize(r.direction);
       float t = 0.5 * (unit_dir.y + 1.0);
-      colors[bounce] = ((1.0-t)*vec3(1.0,1.0,1.0)+t*vec3(0.5,0.7,1.0));
+      colors[bounce] = texture(environmentMap, normalize(r.origin + r. direction*99)).rgb;
       reflectivity[bounce] = vec3(0.0);
     }
   }
@@ -615,11 +672,13 @@ vec3 castRay(Ray r){
 void main()
 {
     // TODO:
-    const int nsamples = 1;
+    const int nsamples = 16;
     vec3 color = vec3(0);
-    Ray r = getRay(TexCoords);
-    color += castRay(r);
+    for (int i = 0; i < nsamples; i++)
+    {
+        Ray r = getRay(TexCoords);
+        color += castRay(r);
+    }
     color /= nsamples;
-    // color = r.direction;
     FragColor = vec4(color, 1.0);
 }

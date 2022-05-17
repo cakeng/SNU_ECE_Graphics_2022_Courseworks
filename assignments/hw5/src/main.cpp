@@ -164,7 +164,8 @@ int main()
     rayTracingShader.setFloat("material_dielectric_glass.ior", 1.5);
     rayTracingShader.setVec3("material_dielectric_glass.extinction_constant", glm::log(glm::vec3(0.80f, 0.89f, 0.75f)));
     rayTracingShader.setVec3("material_dielectric_glass.shadow_attenuation_constant", glm::vec3(0.4f, 0.7f, 0.4f));
-    rayTracingShader.setInt("material_dielectric_glass.scatter_type", 2);
+    rayTracingShader.setInt("material_dielectric_glass.material_type", 1);
+    rayTracingShader.setVec3("material_dielectric_glass.R0", glm::vec3(1.0f));
 
     rayTracingShader.setVec3("material_box.Kd", glm::vec3(0.3, 0.3, 0.6));
     rayTracingShader.setVec3("material_box.Ks", glm::vec3(0.3, 0.3, 0.6));
