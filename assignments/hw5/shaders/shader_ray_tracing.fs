@@ -640,7 +640,7 @@ bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray sca
     return true;
 }
 
-const int MAX_DEPTH = 12; // maximum bounce
+const int MAX_DEPTH = 8; // maximum bounce
 
 vec3 castRay(Ray r, int seed){
     // TODO: trace ray in iterative way.
@@ -676,7 +676,7 @@ vec3 castRay(Ray r, int seed){
 void main()
 {
     // TODO:
-    const int nsamples = 64;
+    const int nsamples = 16;
     vec3 color = vec3(0);
     for (int i = 0; i < nsamples; i++)
     {
