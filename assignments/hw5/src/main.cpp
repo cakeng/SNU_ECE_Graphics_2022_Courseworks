@@ -183,12 +183,14 @@ int main()
     float printTime = 0;
     while (!glfwWindowShouldClose(window))// render loop
     {
-
         float currentTime = glfwGetTime();
+        float dt = currentTime - oldTime;
+        deltaTime = dt;
+        oldTime = currentTime;
         if (currentTime > printTime + 0.2)
         {
             printTime = currentTime;
-            printf ("FPS: %2.1f\n", 1.0f/deltaTime);
+            printf ("FPS: %2.4f\n", 1.0f/deltaTime);
         }
         
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);

@@ -1,5 +1,5 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/main.dir/home/cakeng/build/graphics_2022/assignments/glad.c.o"
+  "CMakeFiles/main.dir/home/cakeng/test/graphics_2022/assignments/glad.c.o"
   "CMakeFiles/main.dir/src/main.cpp.o"
   "build/main"
   "build/main.pdb"
