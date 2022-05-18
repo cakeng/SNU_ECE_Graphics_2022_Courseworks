@@ -110,7 +110,7 @@ Sphere spheres[] = Sphere[](
 );
 
 Box boxes[] = Box[](
-  Box(vec3(0,0,0), vec3(0.5,1,0.5), material_dielectric_glass),
+//   Box(vec3(0,0,0), vec3(0.5,1,0.5), dielectric),
   Box(vec3(2,0,-3), vec3(3,1,-2), material_box)
 );
 
@@ -550,6 +550,30 @@ bool dielectric_scatter(in Material mat, in Ray r, in HitRecord hit, out vec3 at
   return true;
 }
 
+float dielectric_shadow(in Material mat, in Ray r, in HitRecord hit) {
+  vec3 outward_normal;
+  vec3 reflected = reflect(r.direction, hit.normal);
+  float ni_over_nt;
+  vec3 refracted;
+  float reflect_prob;
+  float cosine;
+  if (dot(r.direction, hit.normal) > 0) {
+    outward_normal = - hit.normal;
+    ni_over_nt = mat.ior;
+    cosine = mat.ior * dot(r.direction, hit.normal) / length(r.direction);
+  } else {
+    outward_normal = hit.normal;
+    ni_over_nt = 1.0 / mat.ior;
+    cosine = - dot(r.direction, hit.normal) / length(r.direction);
+  }
+  if (refract(r.direction, outward_normal, ni_over_nt, refracted)) {
+    reflect_prob = schlick_ior(cosine, mat.ior);
+  } else {
+    reflect_prob = 1.0;
+  }
+  return reflect_prob;
+}
+
 bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray scattered, int i) {
     attenuation = vec3 (0.0, 0.0, 0.0);
     if (hit.mat.material_type == 0)
@@ -617,7 +641,23 @@ bool dispatch_scatter(in Ray r, HitRecord hit, out vec3 attenuation, out Ray sca
                 HitRecord shadowRec;
                 if (trace (shadowRay, 0.01, 99, shadowRec))
                 {
+                    if (shadowRec.mat == material_dielectric_glass)
+                    {
+                        float cosine = dot (shadowRec.normal, -shadowRay.direction);
+                        shadow = 1.0 - pow(cosine, 2);  
+                    }
+                    else
+                    {
+                        shadow = 1.0;
+                    }
+                }
+                if (shadow > 1.0)
+                {
                     shadow = 1.0;
+                }
+                else if (shadow < 0.0)
+                {
+                    shadow = 0.0;
                 }
             }
             attenuation += ambient + (1.0 - shadow) * (diffuse + specular);
@@ -676,7 +716,7 @@ vec3 castRay(Ray r, int seed){
 void main()
 {
     // TODO:
-    const int nsamples = 64;
+    const int nsamples = 32;
     vec3 color = vec3(0);
     for (int i = 0; i < nsamples; i++)
     {
