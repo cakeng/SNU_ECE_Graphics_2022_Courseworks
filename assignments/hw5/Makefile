@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/cakeng/builds/graphics_programming/assignments/hw5
+CMAKE_SOURCE_DIR = /home/cakeng/build/graphics_2022/assignments/hw5
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/cakeng/builds/graphics_programming/assignments/hw5
+CMAKE_BINARY_DIR = /home/cakeng/build/graphics_2022/assignments/hw5
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cakeng/builds/graphics_programming/assignments/hw5/CMakeFiles /home/cakeng/builds/graphics_programming/assignments/hw5/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cakeng/build/graphics_2022/assignments/hw5/CMakeFiles /home/cakeng/build/graphics_2022/assignments/hw5/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cakeng/builds/graphics_programming/assignments/hw5/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cakeng/build/graphics_2022/assignments/hw5/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -123,32 +123,32 @@ main/fast:
 	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
 .PHONY : main/fast
 
-home/cakeng/builds/graphics_programming/assignments/glad.o: home/cakeng/builds/graphics_programming/assignments/glad.c.o
+home/cakeng/build/graphics_2022/assignments/glad.o: home/cakeng/build/graphics_2022/assignments/glad.c.o
 
-.PHONY : home/cakeng/builds/graphics_programming/assignments/glad.o
+.PHONY : home/cakeng/build/graphics_2022/assignments/glad.o
 
 # target to build an object file
-home/cakeng/builds/graphics_programming/assignments/glad.c.o:
-	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.o
-.PHONY : home/cakeng/builds/graphics_programming/assignments/glad.c.o
+home/cakeng/build/graphics_2022/assignments/glad.c.o:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/home/cakeng/build/graphics_2022/assignments/glad.c.o
+.PHONY : home/cakeng/build/graphics_2022/assignments/glad.c.o
 
-home/cakeng/builds/graphics_programming/assignments/glad.i: home/cakeng/builds/graphics_programming/assignments/glad.c.i
+home/cakeng/build/graphics_2022/assignments/glad.i: home/cakeng/build/graphics_2022/assignments/glad.c.i
 
-.PHONY : home/cakeng/builds/graphics_programming/assignments/glad.i
+.PHONY : home/cakeng/build/graphics_2022/assignments/glad.i
 
 # target to preprocess a source file
-home/cakeng/builds/graphics_programming/assignments/glad.c.i:
-	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.i
-.PHONY : home/cakeng/builds/graphics_programming/assignments/glad.c.i
+home/cakeng/build/graphics_2022/assignments/glad.c.i:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/home/cakeng/build/graphics_2022/assignments/glad.c.i
+.PHONY : home/cakeng/build/graphics_2022/assignments/glad.c.i
 
-home/cakeng/builds/graphics_programming/assignments/glad.s: home/cakeng/builds/graphics_programming/assignments/glad.c.s
+home/cakeng/build/graphics_2022/assignments/glad.s: home/cakeng/build/graphics_2022/assignments/glad.c.s
 
-.PHONY : home/cakeng/builds/graphics_programming/assignments/glad.s
+.PHONY : home/cakeng/build/graphics_2022/assignments/glad.s
 
 # target to generate assembly for a file
-home/cakeng/builds/graphics_programming/assignments/glad.c.s:
-	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.s
-.PHONY : home/cakeng/builds/graphics_programming/assignments/glad.c.s
+home/cakeng/build/graphics_2022/assignments/glad.c.s:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/home/cakeng/build/graphics_2022/assignments/glad.c.s
+.PHONY : home/cakeng/build/graphics_2022/assignments/glad.c.s
 
 src/main.o: src/main.cpp.o
 
@@ -186,9 +186,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... main"
-	@echo "... home/cakeng/builds/graphics_programming/assignments/glad.o"
-	@echo "... home/cakeng/builds/graphics_programming/assignments/glad.i"
-	@echo "... home/cakeng/builds/graphics_programming/assignments/glad.s"
+	@echo "... home/cakeng/build/graphics_2022/assignments/glad.o"
+	@echo "... home/cakeng/build/graphics_2022/assignments/glad.i"
+	@echo "... home/cakeng/build/graphics_2022/assignments/glad.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

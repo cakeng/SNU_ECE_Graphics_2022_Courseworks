@@ -185,9 +185,6 @@ int main()
     {
 
         float currentTime = glfwGetTime();
-        float dt = currentTime - oldTime;
-        deltaTime = dt;
-        oldTime = currentTime;
         if (currentTime > printTime + 0.2)
         {
             printTime = currentTime;
