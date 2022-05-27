@@ -1,17 +1,39 @@
 #include "falling_sand.h"
 
 physics_property _air = {
-    .material = AIR, .diffuse = {0.65, 0.65, 0.85}};
+    .material = AIR, .diffuse = {0.65, 0.65, 0.85}, .mass = 0.05f,
+    .apply_displacement = true, .apply_gravity = false,};
 physics_property* air = &_air;
 physics_property _sand = {
-    .material = SAND, .diffuse = {0.4, 0.4, 0.1}};
+    .material = SAND, .diffuse = {0.4, 0.4, 0.1}, .mass = 10.0f,
+    .apply_displacement = true, .apply_gravity = true,};
 physics_property* sand = &_sand;
 physics_property _water = {
-    .material = WATER, .diffuse = {0.1, 0.1, 0.8}};
+    .material = WATER, .diffuse = {0.1, 0.1, 0.8}, .mass = 1.0f,
+    .apply_displacement = true, .apply_gravity = true,};
 physics_property* water = &_water;
 physics_property _steam = {
-    .material = STEAM, .diffuse = {0.8, 0.8, 0.8}};
+    .material = STEAM, .diffuse = {0.8, 0.8, 0.8}, .mass = 0.01f,
+    .apply_displacement = true, .apply_gravity = true,};
 physics_property* steam = &_steam;
+physics_property _rock = {
+    .material = ROCK, .diffuse = {0.8, 0.8, 0.8}, .mass = 10.0f,
+    .apply_displacement = true, .apply_gravity = true,};
+physics_property* rock = &_rock;
+
+
+vertex_obj *l_vertex(vertex_obj *vtx)
+{
+    world *world = vtx->world;
+    if (vtx->pos.x == 0)
+        return NULL;
+    return world->vertex_list + vtx->pos.y * world->width + vtx->pos.x - 1;
+}
+
+void generate_vertex(world *world, glm::vec3 pos, physics_property mat)
+{
+
+}
 
 void update_world_physics (world *world)
 {
@@ -28,8 +50,8 @@ void update_word_render_list (world *world)
             vertex_obj *v_obj = world->vertex_list + idx;
             render_obj *r_obj = world->render_list + idx;
             idx++;
-            r_obj->pos.x = SCR_SCALE*(v_obj->pos.x - (SCR_WIDTH/2.0))/SCR_WIDTH;
-            r_obj->pos.y = SCR_SCALE*(v_obj->pos.y - (SCR_HEIGHT/2.0))/SCR_HEIGHT;
+            r_obj->pos.x = SCR_SCALE*((float)v_obj->pos.x - (SCR_WIDTH/2.0))/SCR_WIDTH;
+            r_obj->pos.y = SCR_SCALE*((float)v_obj->pos.y - (SCR_HEIGHT/2.0))/SCR_HEIGHT;
             r_obj->reflect = v_obj->phys_prop->diffuse;
             r_obj->radiation = glm::vec3(0);
         }
@@ -50,10 +72,11 @@ world* make_world (uint64_t width, uint64_t height)
         {
             vertex_obj *v_obj = world_out->vertex_list + idx;
             idx++;
+            v_obj->world = world_out;
             v_obj->phys_prop = air;
             v_obj->pos.x = w;
             v_obj->pos.y = h;
-            v_obj->pos.z = 0.0f;
+            v_obj->pos.z = 0;
             v_obj->vel.x = 0.0f;
             v_obj->vel.y = 0.0f;
             v_obj->vel.z = 0.0f;
@@ -80,8 +103,6 @@ world* make_world (uint64_t width, uint64_t height)
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(render_obj), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-
-    
     return world_out;
 }
 

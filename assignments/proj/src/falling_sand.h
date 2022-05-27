@@ -27,10 +27,10 @@
 typedef struct physics_property physics_property;
 typedef struct vertex_obj vertex_obj;
 typedef struct render_obj render_obj;
+typedef struct int3 int3;
 typedef struct world world;
 
-typedef enum MATERIAL_TYPE {AIR, SAND, WATER, STEAM} MATERIAL_TYPE;
-
+typedef enum MATERIAL_TYPE {AIR, SAND, WATER, STEAM, ROCK} MATERIAL_TYPE;
 
 struct physics_property 
 {
@@ -38,13 +38,27 @@ struct physics_property
 
     // Lighting
     glm::vec3 diffuse;
+
+    // Kinetics
+    float mass;
+
+    bool apply_displacement;
+    bool apply_gravity;
 };
+
+struct int3
+{
+    int x;
+    int y;
+    int z;
+};
+
 
 struct vertex_obj
 {
     physics_property *phys_prop;
-
-    glm::vec3 pos;
+    world *world;
+    int3 pos;
     glm::vec3 vel; // in meter per frame
 };
 
