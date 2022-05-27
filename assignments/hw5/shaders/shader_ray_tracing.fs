@@ -716,7 +716,11 @@ vec3 castRay(Ray r, int seed){
 void main()
 {
     // TODO:
+<<<<<<< HEAD
     const int nsamples = 16;
+=======
+    const int nsamples = 64;
+>>>>>>> 45b821c52e16289686957c88a44f3bef9d5bf7b5
     vec3 color = vec3(0);
     for (int i = 0; i < nsamples; i++)
     {
