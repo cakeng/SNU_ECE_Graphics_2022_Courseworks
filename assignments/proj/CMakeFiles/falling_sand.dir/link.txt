@@ -1,0 +1,1 @@
+/usr/bin/c++  -std=c++11 -O0 -g   CMakeFiles/falling_sand.dir/src/game_engine.cpp.o CMakeFiles/falling_sand.dir/src/main.cpp.o CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.o  -o falling_sand   -L/home/cakeng/build/graphics_2022/assignments/proj/../../lib  -Wl,-rpath,/home/cakeng/build/graphics_2022/assignments/proj/../../lib -lglfw -lrt -lm -ldl 

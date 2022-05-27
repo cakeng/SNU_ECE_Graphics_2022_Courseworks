@@ -1,0 +1,3 @@
+/home/cakeng/build/graphics_2022/assignments/proj/CMakeFiles/rebuild_cache.dir
+/home/cakeng/build/graphics_2022/assignments/proj/CMakeFiles/edit_cache.dir
+/home/cakeng/build/graphics_2022/assignments/proj/CMakeFiles/falling_sand.dir

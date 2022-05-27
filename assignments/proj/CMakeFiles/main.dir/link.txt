@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/main.dir/src/game_engine.cpp.o CMakeFiles/main.dir/src/main.cpp.o CMakeFiles/main.dir/home/cakeng/build/graphics_2022/assignments/glad.c.o  -o build/main   -L/home/cakeng/build/graphics_2022/assignments/proj/../../lib  -Wl,-rpath,/home/cakeng/build/graphics_2022/assignments/proj/../../lib -lglfw -lrt -lm -ldl 
