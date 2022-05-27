@@ -28,7 +28,7 @@ typedef struct physics_property physics_property;
 typedef struct vertex_obj vertex_obj;
 typedef struct render_obj render_obj;
 typedef struct int3 int3;
-typedef struct world world;
+typedef struct world_obj world;
 
 typedef enum MATERIAL_TYPE {AIR, SAND, WATER, STEAM, ROCK} MATERIAL_TYPE;
 
@@ -53,13 +53,13 @@ struct int3
     int z;
 };
 
-
 struct vertex_obj
 {
     physics_property *phys_prop;
-    world *world;
+    world_obj *world;
     int3 pos;
     glm::vec3 vel; // in meter per frame
+    glm::vec3 force;
 };
 
 struct render_obj
@@ -69,8 +69,9 @@ struct render_obj
     glm::vec3 radiation;
 };
 
-struct world
+struct world_obj
 {
+    float t_delta;
     uint64_t width;
     uint64_t height;
     // Physics Engine
@@ -88,14 +89,14 @@ extern physics_property* water;
 extern physics_property* steam;
 
 
-void update_world_physics (world *world);
+void update_world_physics (world_obj *world);
 
-void update_word_render_list (world *world);
+void update_word_render_list (world_obj *world);
 
-world* make_world (uint64_t width, uint64_t height);
+world_obj* make_world (uint64_t width, uint64_t height);
 
-void update_world (world *world);
+void update_world (world_obj *world);
 
-void render_world (world *world);
+void render_world (world_obj *world);
 
 #endif
