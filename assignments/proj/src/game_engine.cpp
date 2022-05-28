@@ -94,6 +94,7 @@ bool swap_vertex (vertex_obj *vtx1, vertex_obj* vtx2)
 
 void reset_vertex (vertex_obj *vtx)
 {
+    vtx->updated = false;
     vtx->phys_prop = air;
     vtx->force = glm::vec3(0.0);
     vtx->vel = glm::vec3(0.0);
@@ -122,6 +123,7 @@ void kinetic_engine (vertex_obj *vtx)
         return;
     
     // Gravity
+    bool fall = false;
     vertex_obj *d_obj = d_vtx (vtx);
     if (d_obj)
     {
@@ -136,6 +138,7 @@ void kinetic_engine (vertex_obj *vtx)
             {
                 vtx->force += 
                     glm::vec3(-(phys->mass - ld_obj->phys_prop->mass) * _GRAVITY/1.414, (phys->mass - ld_obj->phys_prop->mass) * _GRAVITY/1.414, 0.0);
+                fall = true;
             }
             else
             {
@@ -144,6 +147,7 @@ void kinetic_engine (vertex_obj *vtx)
                 {
                     vtx->force += 
                         glm::vec3((phys->mass - rd_obj->phys_prop->mass) * _GRAVITY/1.414, (phys->mass - rd_obj->phys_prop->mass) * _GRAVITY/1.414, 0.0);
+                    fall = true;
                 }
             }
         }
@@ -154,6 +158,7 @@ void kinetic_engine (vertex_obj *vtx)
             {
                 vtx->force += 
                     glm::vec3((phys->mass - rd_obj->phys_prop->mass) * _GRAVITY/1.414, (phys->mass - rd_obj->phys_prop->mass) * _GRAVITY/1.414, 0.0);
+                fall = true;
             }
             else
             {
@@ -162,11 +167,33 @@ void kinetic_engine (vertex_obj *vtx)
                 {
                     vtx->force += 
                         glm::vec3(-(phys->mass - ld_obj->phys_prop->mass) * _GRAVITY/1.414, (phys->mass - ld_obj->phys_prop->mass) * _GRAVITY/1.414, 0.0);
+                    fall = true;
                 }
             }
         }
     }
-    
+    if (!fall && vtx->phys_prop->flow > 0.0)
+    {
+        if (vtx->vel.x > 0.0 && (r_vtx(vtx)->phys_prop->mass < vtx->phys_prop->flow))
+        {
+            vtx->force += FLOW_SCALE*glm::vec3((vtx->phys_prop->flow - r_vtx(vtx)->phys_prop->mass)*vtx->phys_prop->mass, 0.0, 0.0);
+        }
+        else if (vtx->vel.x < 0.0 && (l_vtx(vtx)->phys_prop->mass < vtx->phys_prop->flow))
+        {
+            vtx->force  += FLOW_SCALE*glm::vec3(-(vtx->phys_prop->flow - l_vtx(vtx)->phys_prop->mass)*vtx->phys_prop->mass, 0.0, 0.0);
+        }
+        else
+        {
+            if (frand() < 0.5 && (r_vtx(vtx)->phys_prop->mass < vtx->phys_prop->flow))
+            {
+                vtx->force += FLOW_SCALE*glm::vec3((vtx->phys_prop->flow - r_vtx(vtx)->phys_prop->mass)*vtx->phys_prop->mass, 0.0, 0.0);
+            }
+            else if (l_vtx(vtx)->phys_prop->mass < vtx->phys_prop->flow)
+            {
+                vtx->force += FLOW_SCALE*glm::vec3(-(vtx->phys_prop->flow - l_vtx(vtx)->phys_prop->mass)*vtx->phys_prop->mass, 0.0, 0.0);
+            }
+        }
+    }
     // Drag
     int vec_w = 0, vec_h = 0;
     if (vtx->vel.x > 0)
@@ -194,7 +221,7 @@ void kinetic_engine (vertex_obj *vtx)
     vtx->mov += (dt * MOV_SCALE) * vtx->vel; 
 }
 
-void move_vertex (vertex_obj *vtx)
+vertex_obj *move_vertex (vertex_obj *vtx)
 {
     int dw = vtx->mov.x;
     int dh = vtx->mov.y;
@@ -208,7 +235,7 @@ void move_vertex (vertex_obj *vtx)
             if (!targ)
             {
                 reset_vertex (vtx);
-                return;
+                return vtx;
             }
             if (!swap_vertex (targ, vtx))
             {
@@ -227,7 +254,7 @@ void move_vertex (vertex_obj *vtx)
             if (!targ)
             {
                 reset_vertex (vtx);
-                return;
+                return vtx;
             }
             if (!swap_vertex (targ, vtx))
             {
@@ -248,7 +275,7 @@ void move_vertex (vertex_obj *vtx)
                 if (!targ)
                 {
                     reset_vertex (vtx);
-                    return;
+                    return vtx;
                 }
                 if (!swap_vertex (targ, vtx))
                 {
@@ -267,7 +294,7 @@ void move_vertex (vertex_obj *vtx)
                 if (!targ)
                 {
                     reset_vertex (vtx);
-                    return;
+                    return vtx;
                 }
                 if (!swap_vertex (targ, vtx))
                 {
@@ -282,6 +309,7 @@ void move_vertex (vertex_obj *vtx)
     MOV_EXIT: 
     vtx->mov.x -= vtx_w(vtx) - w;
     vtx->mov.y -= vtx_h(vtx) - h;
+    return vtx;
 }
 
 void generate_vertex(world_obj *world, int w, int h, physics_property *mat)
@@ -311,12 +339,14 @@ void update_world_physics (world_obj *world)
     static float event_time[100] = {-10.0f};
     if (world->current_time > event_time[3] + 0.0)
     {
-        for (int w = 0; w < 40; w++)
-            generate_vertex (world, world->width/2 - 20 + w, world->height - 20, rock);
+        for (int w = 0; w < 80; w++)
+            generate_vertex (world, world->width/2 - 40 + w, world->height - 40, rock);
     }
     if (world->current_time > event_time[0] + 0.1)
     {
-        generate_vertex (world, world->width/2, 10, sand);
+        generate_vertex (world, world->width/2 - 20, 10, sand);
+        generate_vertex (world, world->width/2 + 20, 10, sand);
+        generate_vertex (world, world->width/2, 10, water);
         event_time[0]= world->current_time;
     }
     if (world->current_time > event_time[2] + 0.5)
@@ -350,10 +380,11 @@ void update_world_physics (world_obj *world)
                 for (int w = 0; w < w_section; w++)
                 {
                     vertex_obj *vtx = get_vtx (world, s*w_section + (w_section*2)*t + w, h);
-                    if (vtx)
+                    if (vtx && !vtx->updated)
                     {
                         kinetic_engine (vtx);
-                        move_vertex (vtx);
+                        vtx = move_vertex (vtx);
+                        vtx->updated = true;
                     }
                 }
             }
@@ -376,6 +407,7 @@ void update_word_render_list (world_obj *world)
         for (int w = 0; w < world->width; w++)
         {
             vertex_obj *v_obj = get_vtx (world, w, h);
+            v_obj->updated = false;
             render_obj *r_obj = world->render_list + (v_obj - world->vertex_list)*6;
             r_obj->pos.x = ((float)w*2.0 - world->width)/world->width;
             r_obj->pos.y = (-(float)h*2.0 + world->height)/world->height;

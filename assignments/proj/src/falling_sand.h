@@ -11,15 +11,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#define SCR_WIDTH 1600
+#define SCR_WIDTH 800
 #define SCR_RATIO 3/4
 #define SCR_HEIGHT (SCR_WIDTH*SCR_RATIO)
 
-#define WRD_WIDTH 520
+#define WRD_WIDTH 200
 #define WRD_HEIGHT (WRD_WIDTH*SCR_RATIO)
 
 #define VTX_SCALE 1.0f
 #define MOV_SCALE 0.2f
+#define FLOW_SCALE 3.0f
 
 #define _GRAVITY 10.0f
 #define _METER 1.0f
@@ -56,6 +57,7 @@ struct physics_property
 
 struct vertex_obj
 {
+    bool updated;
     physics_property *phys_prop;
     world_obj *world;
     glm::vec3 force;
