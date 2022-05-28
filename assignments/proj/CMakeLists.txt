@@ -14,6 +14,7 @@ file(GLOB SOURCE
 set(SOURCE ${SOURCE} ../glad.c)
 set(NAME "falling_sand")
 
+find_package(OpenMP REQUIRED)
 link_directories(${PROJECT_ORIGIN}/lib)
 
 if(WIN32)
@@ -32,5 +33,5 @@ if(UNIX)
 endif(UNIX)
 
 add_executable(${NAME} ${SOURCE})
-target_link_libraries(${NAME} ${LIBS})
+target_link_libraries(${NAME} ${LIBS} OpenMP::OpenMP_CXX)
 include_directories(${PROJECT_ORIGIN}/includes)

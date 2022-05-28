@@ -5,7 +5,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/home/cakeng/test/graphics_2022/assignments/glad.c" "/home/cakeng/test/graphics_2022/assignments/hw5/CMakeFiles/main.dir/home/cakeng/test/graphics_2022/assignments/glad.c.o"
+  "/home/cakeng/builds/graphics_programming/assignments/glad.c" "/home/cakeng/builds/graphics_programming/assignments/hw5/CMakeFiles/main.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 
@@ -15,7 +15,7 @@ set(CMAKE_C_TARGET_INCLUDE_PATH
   "../../includes"
   )
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/cakeng/test/graphics_2022/assignments/hw5/src/main.cpp" "/home/cakeng/test/graphics_2022/assignments/hw5/CMakeFiles/main.dir/src/main.cpp.o"
+  "/home/cakeng/builds/graphics_programming/assignments/hw5/src/main.cpp" "/home/cakeng/builds/graphics_programming/assignments/hw5/CMakeFiles/main.dir/src/main.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

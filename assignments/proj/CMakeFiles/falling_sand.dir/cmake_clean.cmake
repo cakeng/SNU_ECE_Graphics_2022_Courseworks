@@ -1,5 +1,5 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.o"
+  "CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.o"
   "CMakeFiles/falling_sand.dir/src/game_engine.cpp.o"
   "CMakeFiles/falling_sand.dir/src/main.cpp.o"
   "falling_sand"

@@ -12,9 +12,16 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #define SCR_WIDTH 1600
-#define SCR_HEIGHT 1200
-#define SCR_SCALE 2.0
+#define SCR_RATIO 3/4
+#define SCR_HEIGHT (SCR_WIDTH*SCR_RATIO)
 
+#define WRD_WIDTH 400
+#define WRD_HEIGHT (WRD_WIDTH*SCR_RATIO)
+
+#define VTX_SCALE 1.0f
+#define MOV_SCALE 0.1f
+
+#define _GRAVITY 11.0f
 #define _DELTA_TIME = 0.001f
 #define _METER 1.0f
 #define _VERTEX_SIZE (_METER/1000.0f)
@@ -35,31 +42,26 @@ typedef enum MATERIAL_TYPE {AIR, SAND, WATER, STEAM, ROCK} MATERIAL_TYPE;
 struct physics_property 
 {
     MATERIAL_TYPE material;
-
+    
     // Lighting
     glm::vec3 diffuse;
 
     // Kinetics
     float mass;
+    float drag;
+    float flow;
 
     bool apply_displacement;
     bool apply_gravity;
-};
-
-struct int3
-{
-    int x;
-    int y;
-    int z;
 };
 
 struct vertex_obj
 {
     physics_property *phys_prop;
     world_obj *world;
-    int3 pos;
-    glm::vec3 vel; // in meter per frame
     glm::vec3 force;
+    glm::vec3 vel; 
+    glm::vec3 mov;
 };
 
 struct render_obj
@@ -71,9 +73,12 @@ struct render_obj
 
 struct world_obj
 {
-    float t_delta;
-    uint64_t width;
-    uint64_t height;
+    bool event_flag;
+    float event_time;
+    float current_time;
+    float delta_time;
+    int width;
+    int height;
     // Physics Engine
     vertex_obj* vertex_list;
 
@@ -93,7 +98,7 @@ void update_world_physics (world_obj *world);
 
 void update_word_render_list (world_obj *world);
 
-world_obj* make_world (uint64_t width, uint64_t height);
+world_obj* make_world (int width, int height);
 
 void update_world (world_obj *world);
 

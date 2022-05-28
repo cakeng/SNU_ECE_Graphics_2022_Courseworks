@@ -1,4 +1,4 @@
-# Install script for directory: /home/cakeng/build/graphics_2022/assignments/proj
+# Install script for directory: /home/cakeng/builds/graphics_programming/assignments/proj
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/cakeng/build/graphics_2022/assignments/proj/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/cakeng/builds/graphics_programming/assignments/proj/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

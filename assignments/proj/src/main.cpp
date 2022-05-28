@@ -59,9 +59,9 @@ int main()
     // ------------------------------------------------------------------
 
     /*************************************/
-    world *world = make_world (SCR_WIDTH, SCR_HEIGHT);
+    world *world = make_world (WRD_WIDTH, WRD_HEIGHT);
 
-    float last_time = -INFINITY;
+    float last_time = 0.0;
 
     // render loop
     // -----------
@@ -78,7 +78,7 @@ int main()
 
         // render the triangle
         ourShader.use();
-        float timeValue = glfwGetTime();
+        
         
         /**********Fill in the blank*********/
 

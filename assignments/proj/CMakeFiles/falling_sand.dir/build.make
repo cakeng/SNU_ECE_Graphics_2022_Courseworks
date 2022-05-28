@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/cakeng/build/graphics_2022/assignments/proj
+CMAKE_SOURCE_DIR = /home/cakeng/builds/graphics_programming/assignments/proj
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/cakeng/build/graphics_2022/assignments/proj
+CMAKE_BINARY_DIR = /home/cakeng/builds/graphics_programming/assignments/proj
 
 # Include any dependencies generated for this target.
 include CMakeFiles/falling_sand.dir/depend.make
@@ -59,58 +59,60 @@ include CMakeFiles/falling_sand.dir/flags.make
 
 CMakeFiles/falling_sand.dir/src/game_engine.cpp.o: CMakeFiles/falling_sand.dir/flags.make
 CMakeFiles/falling_sand.dir/src/game_engine.cpp.o: src/game_engine.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cakeng/build/graphics_2022/assignments/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/falling_sand.dir/src/game_engine.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/falling_sand.dir/src/game_engine.cpp.o -c /home/cakeng/build/graphics_2022/assignments/proj/src/game_engine.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cakeng/builds/graphics_programming/assignments/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/falling_sand.dir/src/game_engine.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/falling_sand.dir/src/game_engine.cpp.o -c /home/cakeng/builds/graphics_programming/assignments/proj/src/game_engine.cpp
 
 CMakeFiles/falling_sand.dir/src/game_engine.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/falling_sand.dir/src/game_engine.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cakeng/build/graphics_2022/assignments/proj/src/game_engine.cpp > CMakeFiles/falling_sand.dir/src/game_engine.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cakeng/builds/graphics_programming/assignments/proj/src/game_engine.cpp > CMakeFiles/falling_sand.dir/src/game_engine.cpp.i
 
 CMakeFiles/falling_sand.dir/src/game_engine.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/falling_sand.dir/src/game_engine.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cakeng/build/graphics_2022/assignments/proj/src/game_engine.cpp -o CMakeFiles/falling_sand.dir/src/game_engine.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cakeng/builds/graphics_programming/assignments/proj/src/game_engine.cpp -o CMakeFiles/falling_sand.dir/src/game_engine.cpp.s
 
 CMakeFiles/falling_sand.dir/src/main.cpp.o: CMakeFiles/falling_sand.dir/flags.make
 CMakeFiles/falling_sand.dir/src/main.cpp.o: src/main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cakeng/build/graphics_2022/assignments/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/falling_sand.dir/src/main.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/falling_sand.dir/src/main.cpp.o -c /home/cakeng/build/graphics_2022/assignments/proj/src/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cakeng/builds/graphics_programming/assignments/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/falling_sand.dir/src/main.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/falling_sand.dir/src/main.cpp.o -c /home/cakeng/builds/graphics_programming/assignments/proj/src/main.cpp
 
 CMakeFiles/falling_sand.dir/src/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/falling_sand.dir/src/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cakeng/build/graphics_2022/assignments/proj/src/main.cpp > CMakeFiles/falling_sand.dir/src/main.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cakeng/builds/graphics_programming/assignments/proj/src/main.cpp > CMakeFiles/falling_sand.dir/src/main.cpp.i
 
 CMakeFiles/falling_sand.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/falling_sand.dir/src/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cakeng/build/graphics_2022/assignments/proj/src/main.cpp -o CMakeFiles/falling_sand.dir/src/main.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cakeng/builds/graphics_programming/assignments/proj/src/main.cpp -o CMakeFiles/falling_sand.dir/src/main.cpp.s
 
-CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.o: CMakeFiles/falling_sand.dir/flags.make
-CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.o: /home/cakeng/build/graphics_2022/assignments/glad.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cakeng/build/graphics_2022/assignments/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.o   -c /home/cakeng/build/graphics_2022/assignments/glad.c
+CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.o: CMakeFiles/falling_sand.dir/flags.make
+CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.o: /home/cakeng/builds/graphics_programming/assignments/glad.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cakeng/builds/graphics_programming/assignments/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.o   -c /home/cakeng/builds/graphics_programming/assignments/glad.c
 
-CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/cakeng/build/graphics_2022/assignments/glad.c > CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.i
+CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/cakeng/builds/graphics_programming/assignments/glad.c > CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.i
 
-CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/cakeng/build/graphics_2022/assignments/glad.c -o CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.s
+CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/cakeng/builds/graphics_programming/assignments/glad.c -o CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.s
 
 # Object files for target falling_sand
 falling_sand_OBJECTS = \
 "CMakeFiles/falling_sand.dir/src/game_engine.cpp.o" \
 "CMakeFiles/falling_sand.dir/src/main.cpp.o" \
-"CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.o"
+"CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.o"
 
 # External object files for target falling_sand
 falling_sand_EXTERNAL_OBJECTS =
 
 falling_sand: CMakeFiles/falling_sand.dir/src/game_engine.cpp.o
 falling_sand: CMakeFiles/falling_sand.dir/src/main.cpp.o
-falling_sand: CMakeFiles/falling_sand.dir/home/cakeng/build/graphics_2022/assignments/glad.c.o
+falling_sand: CMakeFiles/falling_sand.dir/home/cakeng/builds/graphics_programming/assignments/glad.c.o
 falling_sand: CMakeFiles/falling_sand.dir/build.make
+falling_sand: /usr/lib/gcc/x86_64-linux-gnu/9/libgomp.so
+falling_sand: /usr/lib/x86_64-linux-gnu/libpthread.so
 falling_sand: CMakeFiles/falling_sand.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/cakeng/build/graphics_2022/assignments/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable falling_sand"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/cakeng/builds/graphics_programming/assignments/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable falling_sand"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/falling_sand.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -123,6 +125,6 @@ CMakeFiles/falling_sand.dir/clean:
 .PHONY : CMakeFiles/falling_sand.dir/clean
 
 CMakeFiles/falling_sand.dir/depend:
-	cd /home/cakeng/build/graphics_2022/assignments/proj && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/cakeng/build/graphics_2022/assignments/proj /home/cakeng/build/graphics_2022/assignments/proj /home/cakeng/build/graphics_2022/assignments/proj /home/cakeng/build/graphics_2022/assignments/proj /home/cakeng/build/graphics_2022/assignments/proj/CMakeFiles/falling_sand.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/cakeng/builds/graphics_programming/assignments/proj && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/cakeng/builds/graphics_programming/assignments/proj /home/cakeng/builds/graphics_programming/assignments/proj /home/cakeng/builds/graphics_programming/assignments/proj /home/cakeng/builds/graphics_programming/assignments/proj /home/cakeng/builds/graphics_programming/assignments/proj/CMakeFiles/falling_sand.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/falling_sand.dir/depend
 

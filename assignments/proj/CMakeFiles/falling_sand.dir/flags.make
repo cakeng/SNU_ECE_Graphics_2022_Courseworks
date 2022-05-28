@@ -7,11 +7,11 @@ C_FLAGS =
 
 C_DEFINES = 
 
-C_INCLUDES = -I/usr/lib/cmake/glm -I/home/cakeng/build/graphics_2022/assignments/proj/../../includes 
+C_INCLUDES = -I/usr/lib/cmake/glm -I/home/cakeng/builds/graphics_programming/assignments/proj/../../includes 
 
-CXX_FLAGS = -std=c++11 -O0 -g  
+CXX_FLAGS = -std=c++11 -O0 -g   -fopenmp
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/usr/lib/cmake/glm -I/home/cakeng/build/graphics_2022/assignments/proj/../../includes 
+CXX_INCLUDES = -I/usr/lib/cmake/glm -I/home/cakeng/builds/graphics_programming/assignments/proj/../../includes 
 
