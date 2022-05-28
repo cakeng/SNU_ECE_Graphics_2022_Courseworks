@@ -3,7 +3,7 @@
 
 
 physics_property _air = {
-    .material = AIR, .diffuse = {0.65, 0.65, 0.85}, .mass = 0.05f, .drag = 0.25,
+    .material = AIR, .diffuse = {0.65, 0.65, 0.85}, .mass = 0.05f, .drag = 0.05,
     .apply_displacement = true, .apply_gravity = false,};
 physics_property* air = &_air;
 physics_property _sand = {
@@ -287,6 +287,8 @@ void move_vertex (vertex_obj *vtx)
 void generate_vertex(world_obj *world, int w, int h, physics_property *mat)
 {
     vertex_obj obj;
+    if (get_vtx(world, w, h)->phys_prop == mat)
+        return;
     reset_vertex (&obj);
     obj.world = world;
     obj.phys_prop = mat;
@@ -310,14 +312,14 @@ void update_world_physics (world_obj *world)
     if (world->current_time > event_time[3] + 0.0)
     {
         for (int w = 0; w < 40; w++)
-            generate_vertex (world, world->width/2 - 20 + w, 160, rock);
+            generate_vertex (world, world->width/2 - 20 + w, world->height - 20, rock);
     }
-    if (world->current_time > event_time[0] + 0.2)
+    if (world->current_time > event_time[0] + 0.1)
     {
         generate_vertex (world, world->width/2, 10, sand);
         event_time[0]= world->current_time;
     }
-    if (world->current_time > event_time[2] + 0.6)
+    if (world->current_time > event_time[2] + 0.5)
     {
         printf ("FPS: %3.2f, ct: %2.1f dt: %2.4f\n", 1.0/world->delta_time, world->current_time, world->delta_time);
 
@@ -343,9 +345,9 @@ void update_world_physics (world_obj *world)
         #pragma omp parallel for
         for (int t = 0; t < num_threads; t++)
         {
-            for (int w = 0; w < w_section; w++)
+            for (int h = world->height - 1; h >= 0 ; h--)
             {
-                for (int h = 0; h < world->height; h++)
+                for (int w = 0; w < w_section; w++)
                 {
                     vertex_obj *vtx = get_vtx (world, s*w_section + (w_section*2)*t + w, h);
                     if (vtx)

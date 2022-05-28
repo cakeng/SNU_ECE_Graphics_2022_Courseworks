@@ -9,7 +9,7 @@ C_DEFINES =
 
 C_INCLUDES = -I/usr/lib/cmake/glm -I/home/cakeng/builds/graphics_programming/assignments/proj/../../includes 
 
-CXX_FLAGS = -std=c++11 -O0 -g   -fopenmp
+CXX_FLAGS = -std=c++11 -Ofast   -fopenmp
 
 CXX_DEFINES = 
 

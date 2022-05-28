@@ -15,14 +15,13 @@
 #define SCR_RATIO 3/4
 #define SCR_HEIGHT (SCR_WIDTH*SCR_RATIO)
 
-#define WRD_WIDTH 400
+#define WRD_WIDTH 520
 #define WRD_HEIGHT (WRD_WIDTH*SCR_RATIO)
 
 #define VTX_SCALE 1.0f
-#define MOV_SCALE 0.1f
+#define MOV_SCALE 0.2f
 
-#define _GRAVITY 11.0f
-#define _DELTA_TIME = 0.001f
+#define _GRAVITY 10.0f
 #define _METER 1.0f
 #define _VERTEX_SIZE (_METER/1000.0f)
 #define _VERTEX_LIST_MIN_SIZE 4
