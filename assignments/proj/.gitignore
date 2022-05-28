@@ -1,0 +1,5 @@
+*.o
+falling_sand
+CMakeCache.txt
+cmake_install.cmake_install
+CMakeFiles

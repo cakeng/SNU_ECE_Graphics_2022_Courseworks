@@ -1,3 +1,0 @@
-/home/cakeng/builds/graphics_programming/assignments/proj/CMakeFiles/rebuild_cache.dir
-/home/cakeng/builds/graphics_programming/assignments/proj/CMakeFiles/edit_cache.dir
-/home/cakeng/builds/graphics_programming/assignments/proj/CMakeFiles/falling_sand.dir
