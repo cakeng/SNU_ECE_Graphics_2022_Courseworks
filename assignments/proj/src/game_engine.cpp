@@ -4,7 +4,7 @@
 
 physics_property _air = {
     .state = GAS, .material = AIR
-    , .diffuse = {0.65, 0.65, 0.85}, .reflect = {0.05, 0.05, 0.05}, .radiate = {0.0, 0.0, 0.0} 
+    , .diffuse = {0.65, 0.65, 0.85}, .reflect = {0.025, 0.025, 0.03}, .radiate = {0.02, 0.02, 0.05} 
     , .mass = 0.05f, .drag = 0.01, .flow = 1.0f,
     .apply_displacement = true, .apply_gravity = false,};
 physics_property* air = &_air;
@@ -28,15 +28,21 @@ physics_property _steam = {
 physics_property* steam = &_steam;
 physics_property _rock = {
     .state = SOLID,.material = ROCK
-    , .diffuse = {0.43, 0.41, 0.42}, .reflect = {0.9, 0.9, 0.9}, .radiate = {0.0, 0.0, 0.0}  
+    , .diffuse = {0.43, 0.41, 0.42}, .reflect = {0.99, 0.99, 0.99}, .radiate = {0.0, 0.0, 0.0}  
     , .mass = 15.0f, .drag = 1.0, .flow = 1.0f,
     .apply_displacement = false, .apply_gravity = true,};
 physics_property* rock = &_rock;
+physics_property _fire = {
+    .state = LIQUID,.material = FIRE
+    , .diffuse = {1.0, 0.55, 0.3}, .reflect = {1.0, 0.85, 0.6} , .radiate = {0.88, 0.95, 0.3}
+    , .mass = 0.08f, .drag = 1.0, .flow = 1.5f,
+    .apply_displacement = true, .apply_gravity = true,};
+physics_property* fire = &_fire;
 physics_property _light = {
     .state = SOLID,.material = LIGHT
     , .diffuse = {1.0, 1.0, 1.0}, .reflect = {1.0, 1.0, 1.0} , .radiate = {1.0, 0.98, 0.95}
     , .mass = 15.0f, .drag = 1.0, .flow = 1.0f,
-    .apply_displacement = false, .apply_gravity = true,};
+    .apply_displacement = false, .apply_gravity = false,};
 physics_property* light = &_light;
 
 physics_property *phys_map[1024] = {NULL};
@@ -161,6 +167,31 @@ void print_vertex (vertex_obj *vtx)
         , vtx->mov.x, vtx->mov.y);
 }
 
+
+void generate_vertex(world_obj *world, int w, int h, physics_property *mat)
+{
+    vertex_obj obj;
+    if (!get_vtx(world, w, h) || get_vtx(world, w, h)->phys_prop == mat)
+        return;
+    reset_vertex (&obj);
+    obj.col = mat->diffuse;
+    obj.world = world;
+    obj.phys_prop = mat;
+    *get_vtx(world, w, h) = obj;
+}
+
+void generate_vertex(vertex_obj *vtx, physics_property *mat)
+{
+    vertex_obj obj;
+    if (!vtx || vtx->phys_prop == mat)
+        return;
+    reset_vertex (&obj);
+    obj.col = mat->diffuse;
+    obj.world = vtx->world;
+    obj.phys_prop = mat;
+    *vtx = obj;
+}
+
 void kinetic_engine (vertex_obj *vtx)
 {
     float dt = vtx->world->delta_time;
@@ -174,6 +205,43 @@ void kinetic_engine (vertex_obj *vtx)
     }
     if (!v_phys->apply_gravity)
         return;
+
+    if (v_phys->material == FIRE)
+    {
+        bool rockd = false;
+        vertex_obj* rock_targ = u_vtx (vtx);
+        if (rock_targ && rock_targ->phys_prop->material == WATER)
+        {
+            generate_vertex (vtx, rock);
+            generate_vertex (rock_targ, steam);
+            rockd = true;
+        }
+        rock_targ = d_vtx (vtx);
+        if (rock_targ && rock_targ->phys_prop->material == WATER)
+        {
+            generate_vertex (vtx, rock);
+            generate_vertex (rock_targ, steam);
+            rockd = true;
+        }
+        rock_targ = l_vtx (vtx);
+        if (rock_targ && rock_targ->phys_prop->material == WATER)
+        {
+            generate_vertex (vtx, rock);
+            generate_vertex (rock_targ, steam);
+            rockd = true;
+        }
+        rock_targ = r_vtx (vtx);
+        if (rock_targ && rock_targ->phys_prop->material == WATER)
+        {
+            generate_vertex (vtx, rock);
+            generate_vertex (rock_targ, steam);
+            rockd = true;
+        }
+        if (rockd)
+        {
+            return;
+        }
+    }
     
     // Gravity
     vertex_obj *grav_targ = NULL;
@@ -301,6 +369,7 @@ void kinetic_engine (vertex_obj *vtx)
     vertex_obj *drag_targ = get_vtx (vtx->world, n_w, n_h);
     if (drag_targ)
         vtx->vel -= vtx->vel * drag_targ->phys_prop->drag;
+
     vtx->mov += (dt * MOV_SCALE) * vtx->vel; 
 }
 
@@ -343,29 +412,6 @@ vertex_obj *move_vertex (vertex_obj *vtx)
 }
 
 
-void generate_vertex(world_obj *world, int w, int h, physics_property *mat)
-{
-    vertex_obj obj;
-    if (!get_vtx(world, w, h) || get_vtx(world, w, h)->phys_prop == mat)
-        return;
-    reset_vertex (&obj);
-    obj.col = mat->diffuse;
-    obj.world = world;
-    obj.phys_prop = mat;
-    *get_vtx(world, w, h) = obj;
-}
-
-void generate_vertex(vertex_obj *vtx, physics_property *mat)
-{
-    vertex_obj obj;
-    if (!vtx || vtx->phys_prop == mat)
-        return;
-    reset_vertex (&obj);
-    obj.col = mat->diffuse;
-    obj.world = vtx->world;
-    obj.phys_prop = mat;
-    *vtx = obj;
-}
 
 void mouse_event (world_obj *world, MATERIAL_TYPE material, MOUSE_BUTTON button, int xmax, int ymax, float xoffset, float yoffset)
 {
@@ -400,17 +446,7 @@ void mouse_event (world_obj *world, MATERIAL_TYPE material, MOUSE_BUTTON button,
 void update_world_physics (world_obj *world)
 {
     static float event_time[100] = {-10.0f};
-    if (world->current_time > event_time[3] + 0.0)
-    {
-        for (int w = 0; w < 80; w++)
-            generate_vertex (world, world->width/2 - 40 + w, world->height - 20, rock);
-        for (int h = 0; h < 6; h++)
-        {
-            for (int w = 0; w < 6; w++)
-                generate_vertex (world, world->width - 12 + w, 6 + h, light);
-        }
-        
-    }
+
     if (world->current_time > event_time[0] + 0.1)
     {
         generate_vertex (world, world->width/2 - 20, 10, sand);
@@ -516,6 +552,7 @@ world_obj* make_world (int width, int height)
     phys_map[SAND] = sand;
     phys_map[WATER] = water;
     phys_map[ROCK] = rock;
+    phys_map[FIRE] = fire;
     phys_map[LIGHT] = light;
 
     world_obj *world_out = (world_obj*)calloc (1, sizeof(world_obj));
@@ -538,6 +575,16 @@ world_obj* make_world (int width, int height)
             reset_vertex (v_obj);
         }
     }
+
+    for (int w = 0; w < 80; w++)
+        generate_vertex (world_out, world_out->width/2 - 40 + w, world_out->height - 20, rock);
+    for (int h = 0; h < 20; h++)
+    {
+        int wid = (h<10? 2*h : 40 - 2*h);
+        for (int w = 0; w < wid; w++)
+            generate_vertex (world_out, world_out->width - 14 - (wid/2) + w, 4 + h, light);
+    }
+
     update_word_render_list (world_out);
 
     glGenVertexArrays(1, &world_out->VAO);

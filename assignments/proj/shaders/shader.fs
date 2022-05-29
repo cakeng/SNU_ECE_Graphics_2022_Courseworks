@@ -23,12 +23,14 @@ render_obj get_obj (vec3 loc)
 
 vec3 raytrace (vec3 targ, vec3 org)
 {
-    vec3 out_col = vec3(0.2);
+    vec3 out_col = vec3(0.0);
     vec3 delta = targ - org;
     vec3 trace = org;
     int iter = 0;
     while (iter < world_w + world_h && length(delta) > 1.0)
     {
+        if (iter > world_w/6 && length(out_col) < 0.1)
+            break;
         int w = int(trace.x), h = int(trace.y);
         vec3 dir = normalize (vec3(delta.x, delta.y, 0.0));
 
@@ -57,12 +59,23 @@ void main()
     vec3 light = vec3 (0.0);
 
     light += raytrace (pos, vec3 (0, 0, 0));
+    light += raytrace (pos, vec3 (float(world_w)/2, 0, 0));
     light += raytrace (pos, vec3 (world_w, 0, 0));
+    light += raytrace (pos, vec3 (0, world_h, 0));
+    light += raytrace (pos, vec3 (float(world_w)/2, world_h, 0));
+    light += raytrace (pos, vec3 (world_w, world_h, 0));
+    light += raytrace (pos, vec3 (0, float(world_h)/2, 0));
+    light += raytrace (pos, vec3 (world_w, float(world_h)/2, 0));
     // light += raytrace (pos, vec3 (world_w, world_h, 0));
     // light += raytrace (pos, vec3 (0, world_h, 0));
-    light /= 2.0;
+    light /= 8.0;
 
     light = (light + rad + vec3(0.1))*col*ref;
+
+    if (length(light) < 0.1)
+    {
+        light += vec3 (0.015, 0.015, 0.03);
+    }
 
     FragColor = vec4 (light, 0.0);
 }

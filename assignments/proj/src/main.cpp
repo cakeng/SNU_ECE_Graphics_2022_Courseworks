@@ -14,7 +14,7 @@
 
 unsigned long long global_ticks = 0;
 MOUSE_BUTTON mouse_button_input = NONE;
-MATERIAL_TYPE selected_material = AIR;
+MATERIAL_TYPE selected_material = SAND;
 
 world_obj *world;
 
@@ -113,10 +113,6 @@ void processInput(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
 
     /**********Fill in the blank*********/
-    if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
-    {
-        selected_material = AIR;
-    }
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
     {
         selected_material = SAND;
@@ -130,6 +126,10 @@ void processInput(GLFWwindow* window)
         selected_material = ROCK;
     }
     if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+    {
+        selected_material = FIRE;
+    }
+    if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)
     {
         selected_material = LIGHT;
     }

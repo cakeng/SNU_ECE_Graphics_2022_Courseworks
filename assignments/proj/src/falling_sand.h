@@ -24,7 +24,7 @@
 #define MOV_SCALE 0.2f
 #define FLOW_SCALE 3.0f
 
-#define MOUSE_BRUSH_SIZE 5
+#define MOUSE_BRUSH_SIZE 6
 
 #define _GRAVITY 10.0f
 
@@ -35,7 +35,7 @@ typedef struct int3 int3;
 typedef struct world_obj world_obj;
 
 typedef enum MOUSE_BUTTON {NONE, LEFT, RIGHT} MOUSE_BUTTON;
-typedef enum MATERIAL_TYPE {AIR, SAND, WATER, STEAM, ROCK, LIGHT} MATERIAL_TYPE;
+typedef enum MATERIAL_TYPE {AIR, SAND, WATER, STEAM, FIRE, ROCK, LIGHT} MATERIAL_TYPE;
 typedef enum _TYPE {GAS, LIQUID, SOLID} _TYPE;
 
 struct physics_property 
