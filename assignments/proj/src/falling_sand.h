@@ -11,40 +11,42 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#define SCR_WIDTH 800
+#include "shader.h"
+
+#define SCR_WIDTH 1200
 #define SCR_RATIO 3/4
 #define SCR_HEIGHT (SCR_WIDTH*SCR_RATIO)
 
-#define WRD_WIDTH 200
+#define WRD_WIDTH 168
 #define WRD_HEIGHT (WRD_WIDTH*SCR_RATIO)
 
 #define VTX_SCALE 1.0f
 #define MOV_SCALE 0.2f
 #define FLOW_SCALE 3.0f
 
+#define MOUSE_BRUSH_SIZE 5
+
 #define _GRAVITY 10.0f
-#define _METER 1.0f
-#define _VERTEX_SIZE (_METER/1000.0f)
-#define _VERTEX_LIST_MIN_SIZE 4
-#define _CHUNK_LIST_MIN_SIZE 4096
-#define _K *1000UL
-#define _M *1000000UL
-#define _m /(1000UL)
 
 typedef struct physics_property physics_property;
 typedef struct vertex_obj vertex_obj;
 typedef struct render_obj render_obj;
 typedef struct int3 int3;
-typedef struct world_obj world;
+typedef struct world_obj world_obj;
 
-typedef enum MATERIAL_TYPE {AIR, SAND, WATER, STEAM, ROCK} MATERIAL_TYPE;
+typedef enum MOUSE_BUTTON {NONE, LEFT, RIGHT} MOUSE_BUTTON;
+typedef enum MATERIAL_TYPE {AIR, SAND, WATER, STEAM, ROCK, LIGHT} MATERIAL_TYPE;
+typedef enum _TYPE {GAS, LIQUID, SOLID} _TYPE;
 
 struct physics_property 
 {
-    MATERIAL_TYPE material;
     
+    _TYPE state;
+    MATERIAL_TYPE material;
     // Lighting
     glm::vec3 diffuse;
+    glm::vec3 reflect;
+    glm::vec3 radiate;
 
     // Kinetics
     float mass;
@@ -58,6 +60,7 @@ struct physics_property
 struct vertex_obj
 {
     bool updated;
+    glm::vec3 col;
     physics_property *phys_prop;
     world_obj *world;
     glm::vec3 force;
@@ -68,8 +71,10 @@ struct vertex_obj
 struct render_obj
 {
     glm::vec3 pos;
+    glm::vec3 vpos;
     glm::vec3 reflect; 
     glm::vec3 radiation;
+    glm::vec3 col;
 };
 
 struct world_obj
@@ -86,7 +91,7 @@ struct world_obj
     // Rendering Engine
     render_obj *render_list;
 
-    unsigned int VBO, VAO;
+    unsigned int VBO, VAO, SSBO;
 };
 
 extern physics_property* air;
@@ -94,7 +99,7 @@ extern physics_property* sand;
 extern physics_property* water;
 extern physics_property* steam;
 
-
+void mouse_event (world_obj *world, MATERIAL_TYPE material, MOUSE_BUTTON button, int xmax, int ymax, float xoffset, float yoffset);
 void update_world_physics (world_obj *world);
 
 void update_word_render_list (world_obj *world);
@@ -103,6 +108,6 @@ world_obj* make_world (int width, int height);
 
 void update_world (world_obj *world);
 
-void render_world (world_obj *world);
+void render_world (world_obj *world, Shader *shader);
 
 #endif

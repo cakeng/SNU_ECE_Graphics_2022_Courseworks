@@ -3,25 +3,43 @@
 
 
 physics_property _air = {
-    .material = AIR, .diffuse = {0.65, 0.65, 0.85}, .mass = 0.05f, .drag = 0.05,
+    .state = GAS, .material = AIR
+    , .diffuse = {0.65, 0.65, 0.85}, .reflect = {0.05, 0.05, 0.05}, .radiate = {0.0, 0.0, 0.0} 
+    , .mass = 0.05f, .drag = 0.01, .flow = 1.0f,
     .apply_displacement = true, .apply_gravity = false,};
 physics_property* air = &_air;
 physics_property _sand = {
-    .material = SAND, .diffuse = {0.65, 0.5, 0.2}, .mass = 10.0f, .drag = 1.0,
+    .state = SOLID,.material = SAND
+    , .diffuse = {0.65, 0.5, 0.2}, .reflect = {0.9, 0.9, 0.9}, .radiate = {0.0, 0.0, 0.0}  
+    , .mass = 10.0f, .drag = 1.0, .flow = 1.0f,
     .apply_displacement = true, .apply_gravity = true,};
 physics_property* sand = &_sand;
 physics_property _water = {
-    .material = WATER, .diffuse = {0.1, 0.1, 0.8}, .mass = 1.0f, .drag = 0.6, .flow = 1.0f,
+    .state = LIQUID,.material = WATER
+    , .diffuse = {0.1, 0.1, 0.8}, .reflect = {0.7, 0.7, 0.7}, .radiate = {0.0, 0.0, 0.0}  
+    , .mass = 1.0f, .drag = 0.2, .flow = 5.0f,
     .apply_displacement = true, .apply_gravity = true,};
 physics_property* water = &_water;
 physics_property _steam = {
-    .material = STEAM, .diffuse = {0.8, 0.8, 0.8}, .mass = 0.01f, .drag = 0.35, .flow = 1.0f,
+    .state = GAS,.material = STEAM
+    , .diffuse = {0.8, 0.8, 0.8}, .reflect = {0.9, 0.9, 0.9}, .radiate = {0.0, 0.0, 0.0}  
+    , .mass = 0.01f, .drag = 0.35, .flow = 1.0f,
     .apply_displacement = true, .apply_gravity = true,};
 physics_property* steam = &_steam;
 physics_property _rock = {
-    .material = ROCK, .diffuse = {0.43, 0.41, 0.42}, .mass = 15.0f, .drag = 1.0,
+    .state = SOLID,.material = ROCK
+    , .diffuse = {0.43, 0.41, 0.42}, .reflect = {0.9, 0.9, 0.9}, .radiate = {0.0, 0.0, 0.0}  
+    , .mass = 15.0f, .drag = 1.0, .flow = 1.0f,
     .apply_displacement = false, .apply_gravity = true,};
 physics_property* rock = &_rock;
+physics_property _light = {
+    .state = SOLID,.material = LIGHT
+    , .diffuse = {1.0, 1.0, 1.0}, .reflect = {1.0, 1.0, 1.0} , .radiate = {1.0, 0.98, 0.95}
+    , .mass = 15.0f, .drag = 1.0, .flow = 1.0f,
+    .apply_displacement = false, .apply_gravity = true,};
+physics_property* light = &_light;
+
+physics_property *phys_map[1024] = {NULL};
 
 inline float frand()
 {
@@ -78,11 +96,45 @@ vertex_obj *d_vtx(vertex_obj *vtx)
         return NULL;
     return vtx + vtx->world->width;
 }
+vertex_obj *ul_vtx(vertex_obj *vtx)
+{
+    world_obj *world = vtx->world;
+    if (vtx_w(vtx) == 0 || vtx_h(vtx) == 0)
+        return NULL;
+    return vtx - 1 - vtx->world->width;
+}
+vertex_obj *ur_vtx(vertex_obj *vtx)
+{
+    world_obj *world = vtx->world;
+    if (vtx_w(vtx)== world->width-1 || vtx_h(vtx) == 0)
+        return NULL;
+    return vtx + 1 - vtx->world->width;
+}
+vertex_obj *dl_vtx(vertex_obj *vtx)
+{
+    world_obj *world = vtx->world;
+    if (vtx_h(vtx) == world->height-1 || vtx_w(vtx) == 0)
+        return NULL;
+    return vtx - 1 + vtx->world->width;
+}
+vertex_obj *dr_vtx(vertex_obj *vtx)
+{
+    world_obj *world = vtx->world;
+    if (vtx_h(vtx) == world->height-1 || vtx_w(vtx)== world->width-1)
+        return NULL;
+    return vtx + 1 + vtx->world->width;
+}
+
+glm::vec3 dir_vtx (vertex_obj *org, vertex_obj* dir)
+{
+    int o_w = vtx_w(org), o_h = vtx_h(org), d_w = vtx_w(dir), d_h = vtx_h(dir);
+    return glm::normalize(glm::vec3(d_w - o_w, d_h - o_h, 0.0));
+}
 
 bool swap_vertex (vertex_obj *vtx1, vertex_obj* vtx2)
 {
-    if (vtx1 == vtx2)
-        return true;
+    if (vtx1->phys_prop == vtx2->phys_prop)
+        return false;
     if (!(vtx1->phys_prop->apply_displacement && vtx2->phys_prop->apply_displacement))
         return false;
     vertex_obj temp;
@@ -99,6 +151,7 @@ void reset_vertex (vertex_obj *vtx)
     vtx->force = glm::vec3(0.0);
     vtx->vel = glm::vec3(0.0);
     vtx->mov = glm::vec3(0.0);
+    vtx->col = vtx->phys_prop->diffuse;
 }
 
 void print_vertex (vertex_obj *vtx)
@@ -112,226 +165,236 @@ void kinetic_engine (vertex_obj *vtx)
 {
     float dt = vtx->world->delta_time;
     int w = vtx_w(vtx), h = vtx_h(vtx);
-    physics_property *phys = vtx->phys_prop;
-    if (!phys->apply_displacement)
+    physics_property *v_phys = vtx->phys_prop;
+    if (!v_phys->apply_displacement)
     {
         vtx->vel = glm::vec3(0.0f);
         vtx->mov - glm::vec3(0.0f);
         return;
     }
-    if (!phys->apply_gravity)
+    if (!v_phys->apply_gravity)
         return;
     
     // Gravity
-    bool fall = false;
-    vertex_obj *d_obj = d_vtx (vtx);
-    if (d_obj)
+    vertex_obj *grav_targ = NULL;
+    glm::vec3 ratio = glm::vec3 (1.0f);
+    if (v_phys->state == SOLID)
     {
-        if (d_obj->phys_prop->mass < phys->mass)
+        if (!grav_targ && d_vtx(vtx) && (d_vtx(vtx)->phys_prop != v_phys) &&
+            (d_vtx(vtx)->phys_prop->state == GAS || d_vtx(vtx)->phys_prop->state == LIQUID))
         {
-            vtx->force += glm::vec3(0.0, (phys->mass - d_obj->phys_prop->mass) * _GRAVITY, 0.0);
+            grav_targ = d_vtx(vtx);
         }
-        else if (frand() < 0.5f)
+        if (frand() < 0.5)
         {
-            vertex_obj *ld_obj = l_vtx (d_obj); 
-            if (ld_obj && ld_obj->phys_prop->mass < phys->mass)
+            if (!grav_targ&& dl_vtx(vtx) && (dl_vtx(vtx)->phys_prop != v_phys) &&
+                (dl_vtx(vtx)->phys_prop->state == GAS || dl_vtx(vtx)->phys_prop->state == LIQUID))
             {
-                vtx->force += 
-                    glm::vec3(-(phys->mass - ld_obj->phys_prop->mass) * _GRAVITY/1.414, (phys->mass - ld_obj->phys_prop->mass) * _GRAVITY/1.414, 0.0);
-                fall = true;
+                grav_targ = dl_vtx(vtx);
             }
-            else
+            else if (!grav_targ&& dr_vtx(vtx) && (dr_vtx(vtx)->phys_prop != v_phys) &&
+                (dr_vtx(vtx)->phys_prop->state == GAS || dr_vtx(vtx)->phys_prop->state == LIQUID))
             {
-                vertex_obj *rd_obj = r_vtx (d_obj); 
-                if (rd_obj && rd_obj->phys_prop->mass < phys->mass)
-                {
-                    vtx->force += 
-                        glm::vec3((phys->mass - rd_obj->phys_prop->mass) * _GRAVITY/1.414, (phys->mass - rd_obj->phys_prop->mass) * _GRAVITY/1.414, 0.0);
-                    fall = true;
-                }
+                grav_targ = dr_vtx(vtx);
             }
         }
         else
         {
-            vertex_obj *rd_obj = r_vtx (d_obj); 
-            if (rd_obj && rd_obj->phys_prop->mass < phys->mass)
+            if (!grav_targ&& dr_vtx(vtx) && (dr_vtx(vtx)->phys_prop != v_phys) &&
+                (dr_vtx(vtx)->phys_prop->state == GAS || dr_vtx(vtx)->phys_prop->state == LIQUID))
             {
-                vtx->force += 
-                    glm::vec3((phys->mass - rd_obj->phys_prop->mass) * _GRAVITY/1.414, (phys->mass - rd_obj->phys_prop->mass) * _GRAVITY/1.414, 0.0);
-                fall = true;
+                grav_targ = dr_vtx(vtx);
             }
-            else
+            else if (!grav_targ&& dl_vtx(vtx) && (dl_vtx(vtx)->phys_prop != v_phys) &&
+                (dl_vtx(vtx)->phys_prop->state == GAS || dl_vtx(vtx)->phys_prop->state == LIQUID))
             {
-                vertex_obj *ld_obj = l_vtx (d_obj); 
-                if (ld_obj && ld_obj->phys_prop->mass < phys->mass)
-                {
-                    vtx->force += 
-                        glm::vec3(-(phys->mass - ld_obj->phys_prop->mass) * _GRAVITY/1.414, (phys->mass - ld_obj->phys_prop->mass) * _GRAVITY/1.414, 0.0);
-                    fall = true;
-                }
+                grav_targ = dl_vtx(vtx);
             }
         }
     }
-    if (!fall && vtx->phys_prop->flow > 0.0)
+    else if (v_phys->state == LIQUID)
     {
-        if (vtx->vel.x > 0.0 && (r_vtx(vtx)->phys_prop->mass < vtx->phys_prop->flow))
+        if (!grav_targ && d_vtx(vtx) && (d_vtx(vtx)->phys_prop != v_phys) &&
+            (d_vtx(vtx)->phys_prop->state == GAS || d_vtx(vtx)->phys_prop->state == LIQUID))
         {
-            vtx->force += FLOW_SCALE*glm::vec3((vtx->phys_prop->flow - r_vtx(vtx)->phys_prop->mass)*vtx->phys_prop->mass, 0.0, 0.0);
+            grav_targ = d_vtx(vtx);
         }
-        else if (vtx->vel.x < 0.0 && (l_vtx(vtx)->phys_prop->mass < vtx->phys_prop->flow))
+        if (vtx->vel.x > 0.0 || (vtx->vel.x == 0.0 && frand() < 0.5))
         {
-            vtx->force  += FLOW_SCALE*glm::vec3(-(vtx->phys_prop->flow - l_vtx(vtx)->phys_prop->mass)*vtx->phys_prop->mass, 0.0, 0.0);
+            if (!grav_targ&& dr_vtx(vtx) && (dr_vtx(vtx)->phys_prop != v_phys) &&
+                (dr_vtx(vtx)->phys_prop->state == GAS || dr_vtx(vtx)->phys_prop->state == LIQUID))
+            {
+                grav_targ = dr_vtx(vtx);
+            }
+            else if (!grav_targ && r_vtx(vtx) && (r_vtx(vtx)->phys_prop != v_phys) &&
+                (r_vtx(vtx)->phys_prop->state == GAS || r_vtx(vtx)->phys_prop->state == LIQUID))
+            {
+                grav_targ = r_vtx(vtx);
+                vtx->vel = glm::vec3(0.0f);
+            }
         }
         else
         {
-            if (frand() < 0.5 && (r_vtx(vtx)->phys_prop->mass < vtx->phys_prop->flow))
+            if (!grav_targ&& dl_vtx(vtx) && (dl_vtx(vtx)->phys_prop != v_phys) &&
+                (dl_vtx(vtx)->phys_prop->state == GAS || dl_vtx(vtx)->phys_prop->state == LIQUID))
             {
-                vtx->force += FLOW_SCALE*glm::vec3((vtx->phys_prop->flow - r_vtx(vtx)->phys_prop->mass)*vtx->phys_prop->mass, 0.0, 0.0);
+                grav_targ = dl_vtx(vtx);
             }
-            else if (l_vtx(vtx)->phys_prop->mass < vtx->phys_prop->flow)
+            else if (!grav_targ && (vtx->vel.x <= 0.0) && l_vtx(vtx) && (l_vtx(vtx)->phys_prop != v_phys) &&
+                (l_vtx(vtx)->phys_prop->state == GAS || l_vtx(vtx)->phys_prop->state == LIQUID))
             {
-                vtx->force += FLOW_SCALE*glm::vec3(-(vtx->phys_prop->flow - l_vtx(vtx)->phys_prop->mass)*vtx->phys_prop->mass, 0.0, 0.0);
+                grav_targ = l_vtx(vtx);
+                vtx->vel = glm::vec3(0.0f);
             }
         }
     }
-    // Drag
-    int vec_w = 0, vec_h = 0;
-    if (vtx->vel.x > 0)
+    else // if (v_phys->state == GAS)
     {
-        vec_w = 1;
+        if (!grav_targ && u_vtx(vtx) && (u_vtx(vtx)->phys_prop != v_phys) &&
+            (u_vtx(vtx)->phys_prop->state == GAS || u_vtx(vtx)->phys_prop->state == LIQUID))
+        {
+            grav_targ = u_vtx(vtx);
+        }
+        if (frand() < 0.5)
+        {
+            if (!grav_targ&& ul_vtx(vtx) && (ul_vtx(vtx)->phys_prop != v_phys) &&
+                (ul_vtx(vtx)->phys_prop->state == GAS || ul_vtx(vtx)->phys_prop->state == LIQUID))
+            {
+                grav_targ = ul_vtx(vtx);
+            }
+            else if (!grav_targ&& ur_vtx(vtx) && (ur_vtx(vtx)->phys_prop != v_phys) &&
+                (ur_vtx(vtx)->phys_prop->state == GAS || ur_vtx(vtx)->phys_prop->state == LIQUID))
+            {
+                grav_targ = ur_vtx(vtx);
+            }
+        }
+        else
+        {
+            if (!grav_targ&& ur_vtx(vtx) && (ur_vtx(vtx)->phys_prop != v_phys) &&
+                (ur_vtx(vtx)->phys_prop->state == GAS || ur_vtx(vtx)->phys_prop->state == LIQUID))
+            {
+                grav_targ = ur_vtx(vtx);
+            }
+            else if (!grav_targ&& ul_vtx(vtx) && (ul_vtx(vtx)->phys_prop != v_phys) &&
+                (ul_vtx(vtx)->phys_prop->state == GAS || ul_vtx(vtx)->phys_prop->state == LIQUID))
+            {
+                grav_targ = ul_vtx(vtx);
+            }
+        }
     }
-    else if (vtx->vel.x < 0)
+    if (!grav_targ)
     {
-        vec_w = -1;
+        vtx->mov = glm::vec3(0.0f);
+        vtx->vel = glm::vec3(0.0f);
     }
-    if (vtx->vel.y > 0)
+    else
     {
-        vec_h = 1;
+        ratio *= glm::vec3 (v_phys->flow, 1.0, 1.0);
+        if (v_phys->state != GAS)
+            vtx->vel += ratio * dir_vtx(vtx, grav_targ) * _GRAVITY * (v_phys->mass - grav_targ->phys_prop->mass) / v_phys->mass;
+        else
+            vtx->vel += ratio * dir_vtx(vtx, grav_targ) * _GRAVITY * (grav_targ->phys_prop->mass - v_phys->mass) / v_phys->mass;
     }
-    else if (vtx->vel.y < 0)
-    {
-        vec_h = -1;
-    }
-    vertex_obj *targ_obj = get_vtx (vtx->world, w + vec_w, h + vec_h);
-    if (targ_obj)
-        vtx->force -= vtx->vel * (targ_obj->phys_prop->drag);
 
-    vtx->vel += vtx->force / phys->mass;
-    vtx->force = glm::vec3(0.0);
+    glm::vec3 dir = glm::normalize (glm::vec3 (vtx->vel.x, vtx->vel.y, 0.0));
+    int n_w = w + 1.42 * dir.x, n_h = h + 1.42 * dir.y;
+    vertex_obj *drag_targ = get_vtx (vtx->world, n_w, n_h);
+    if (drag_targ)
+        vtx->vel -= vtx->vel * drag_targ->phys_prop->drag;
     vtx->mov += (dt * MOV_SCALE) * vtx->vel; 
 }
 
 vertex_obj *move_vertex (vertex_obj *vtx)
 {
-    int dw = vtx->mov.x;
-    int dh = vtx->mov.y;
-    float dh_dw = vtx->mov.y/vtx->mov.x;
-    int w = vtx_w(vtx), h = vtx_h(vtx);
-    if (dw > 0)
+    while (abs(vtx->mov.x) > 1.0 || abs(vtx->mov.y) > 1.0)
     {
-        for (int i = 0; i < dw; i++)
+        int w = vtx_w(vtx), h = vtx_h(vtx);
+        glm::vec3 dir = glm::normalize (glm::vec3 (vtx->mov.x, vtx->mov.y, 0.0));
+        int n_w = w + 1.42 * dir.x, n_h = h + 1.42 * dir.y;
+        vertex_obj *targ = get_vtx (vtx->world, n_w, n_h);
+        if (!targ)
         {
-            vertex_obj *targ = get_vtx (vtx->world, w + (i+1), h + dh_dw*(i+1));
-            if (!targ)
-            {
-                reset_vertex (vtx);
-                return vtx;
-            }
-            if (!swap_vertex (targ, vtx))
-            {
-                vtx->mov = glm::vec3(0.0f);
-                vtx->vel = glm::vec3(0.0f);
-                goto MOV_EXIT;
-            }
-            vtx = targ;
+            reset_vertex (vtx);
+            return NULL;
         }
+        if (!swap_vertex(vtx, targ))
+        {
+            float vel_norm = glm::length (vtx->vel);
+            vtx->vel = -0.1f * vtx->vel;
+            float fr = frand();
+            if (frand() < 0.5)
+                vtx->vel += 0.2f * glm::vec3 (vtx->vel.x, 0.0, 0.0);
+            if (frand() < 0.5)
+                vtx->vel += 0.2f * glm::vec3 (-vtx->vel.x, 0.0, 0.0);
+            if (frand() < 0.5)
+                vtx->vel += 0.2f * glm::vec3 (0.0, vtx->vel.y, 0.0);
+            if (frand() < 0.5)
+                vtx->vel += 0.2f * glm::vec3 (0.0, -vtx->vel.y, 0.0);
+            vtx->mov = glm::vec3(0.0);
+            return vtx;
+        }
+        vtx = targ;
+        // printf ("mx %2.2f, my %2.2f, w %d, h %d, n_w %d, n_h %d, n_mx %2.2f, n_my %2.2f\n",
+        //     vtx->mov.x, vtx->mov.y, w, h, n_w, n_h, vtx->mov.x - (n_w - w), vtx->mov.y - (n_h - h));
+        vtx->mov.x -= (n_w - w);
+        vtx->mov.y -= (n_h - h);
     }
-    else if (dw < 0)
-    {
-        for (int i = 0; i < -dw; i++)
-        {
-            vertex_obj *targ = get_vtx (vtx->world, w - (i+1), h - dh_dw*(i+1));
-            if (!targ)
-            {
-                reset_vertex (vtx);
-                return vtx;
-            }
-            if (!swap_vertex (targ, vtx))
-            {
-                vtx->mov = glm::vec3(0.0f);
-                vtx->vel = glm::vec3(0.0f);
-                goto MOV_EXIT;
-            }
-            vtx = targ;
-        }
-    }
-    else
-    {
-        if (dh > 0)
-        {
-            for (int i = 0; i < dh; i++)
-            {
-                vertex_obj *targ = get_vtx (vtx->world, w, h + (i+1));
-                if (!targ)
-                {
-                    reset_vertex (vtx);
-                    return vtx;
-                }
-                if (!swap_vertex (targ, vtx))
-                {
-                    vtx->mov = glm::vec3(0.0f);
-                    vtx->vel = glm::vec3(0.0f);
-                    goto MOV_EXIT;
-                }
-                vtx = targ;
-            }
-        }
-        else
-        {
-            for (int i = 0; i < -dh; i++)
-            {
-                vertex_obj *targ = get_vtx (vtx->world, w, h - (i+1));
-                if (!targ)
-                {
-                    reset_vertex (vtx);
-                    return vtx;
-                }
-                if (!swap_vertex (targ, vtx))
-                {
-                    vtx->mov = glm::vec3(0.0f);
-                    vtx->vel = glm::vec3(0.0f);
-                    goto MOV_EXIT;
-                }
-                vtx = targ;
-            }
-        }
-    }
-    MOV_EXIT: 
-    vtx->mov.x -= vtx_w(vtx) - w;
-    vtx->mov.y -= vtx_h(vtx) - h;
     return vtx;
 }
+
 
 void generate_vertex(world_obj *world, int w, int h, physics_property *mat)
 {
     vertex_obj obj;
-    if (get_vtx(world, w, h)->phys_prop == mat)
+    if (!get_vtx(world, w, h) || get_vtx(world, w, h)->phys_prop == mat)
         return;
     reset_vertex (&obj);
+    obj.col = mat->diffuse;
     obj.world = world;
     obj.phys_prop = mat;
     *get_vtx(world, w, h) = obj;
 }
 
-bool world_event (world_obj *world)
+void generate_vertex(vertex_obj *vtx, physics_property *mat)
 {
-    if (world->current_time > world->event_time && world->event_flag)
+    vertex_obj obj;
+    if (!vtx || vtx->phys_prop == mat)
+        return;
+    reset_vertex (&obj);
+    obj.col = mat->diffuse;
+    obj.world = vtx->world;
+    obj.phys_prop = mat;
+    *vtx = obj;
+}
+
+void mouse_event (world_obj *world, MATERIAL_TYPE material, MOUSE_BUTTON button, int xmax, int ymax, float xoffset, float yoffset)
+{
+    static float last_callback_time = 0.0f;
+    if (button != NONE && (world->current_time - last_callback_time > 0.005))
     {
-        generate_vertex (world, world->width/2, 10, sand);
-        world->event_flag = false;
-        return true;
+        int w = (float)world->width * xoffset / xmax;
+        int h = (float)world->height * yoffset / ymax;  
+        last_callback_time = world->current_time;
+        for (int ih = 0; ih < MOUSE_BRUSH_SIZE; ih++)
+        {
+            for (int iw = 0; iw < MOUSE_BRUSH_SIZE; iw++)
+            {
+                vertex_obj *targ = 
+                    get_vtx(world, w + iw - MOUSE_BRUSH_SIZE/2, h + ih - MOUSE_BRUSH_SIZE/2);
+                if (!targ)
+                    return;
+                if (button == RIGHT)
+                {
+                    reset_vertex (targ);
+                }
+                else if (button == LEFT)
+                {
+                    generate_vertex (targ, phys_map[material]);
+                }
+            }
+        }
+        
     }
-    return false;
 }
 
 void update_world_physics (world_obj *world)
@@ -340,13 +403,21 @@ void update_world_physics (world_obj *world)
     if (world->current_time > event_time[3] + 0.0)
     {
         for (int w = 0; w < 80; w++)
-            generate_vertex (world, world->width/2 - 40 + w, world->height - 40, rock);
+            generate_vertex (world, world->width/2 - 40 + w, world->height - 20, rock);
+        for (int h = 0; h < 6; h++)
+        {
+            for (int w = 0; w < 6; w++)
+                generate_vertex (world, world->width - 12 + w, 6 + h, light);
+        }
+        
     }
     if (world->current_time > event_time[0] + 0.1)
     {
         generate_vertex (world, world->width/2 - 20, 10, sand);
         generate_vertex (world, world->width/2 + 20, 10, sand);
         generate_vertex (world, world->width/2, 10, water);
+        generate_vertex (world, world->width/2+2, 10, water);
+        generate_vertex (world, world->width/2-2, 10, water);
         event_time[0]= world->current_time;
     }
     if (world->current_time > event_time[2] + 0.5)
@@ -367,6 +438,8 @@ void update_world_physics (world_obj *world)
         // }
         event_time[2] = world->current_time;
     }
+
+
     int num_threads = std::thread::hardware_concurrency();
     num_threads = num_threads > 0 ? num_threads : 1;
     int w_section = world->width / (num_threads*2);
@@ -384,7 +457,8 @@ void update_world_physics (world_obj *world)
                     {
                         kinetic_engine (vtx);
                         vtx = move_vertex (vtx);
-                        vtx->updated = true;
+                        if (vtx)
+                            vtx->updated = true;
                     }
                 }
             }
@@ -393,10 +467,12 @@ void update_world_physics (world_obj *world)
     
 }
 
-void update_render_obj (render_obj* r_obj, vertex_obj *v_obj)
+void update_render_obj (render_obj* r_obj, vertex_obj *v_obj, int h, int w)
 {
-    r_obj->reflect = v_obj->phys_prop->diffuse;
-    r_obj->radiation = glm::vec3(0);
+    r_obj->col = v_obj->col;
+    r_obj->reflect = v_obj->phys_prop->reflect;
+    r_obj->radiation = v_obj->phys_prop->radiate;
+    r_obj->vpos = glm::vec3 (w, h, 0.0);
 }
 
 void update_word_render_list (world_obj *world)
@@ -423,12 +499,12 @@ void update_word_render_list (world_obj *world)
             (r_obj + 5)->pos.x = r_obj->pos.x + (2.0/world->width)*VTX_SCALE;
             (r_obj + 5)->pos.y = r_obj->pos.y;
             
-            update_render_obj (r_obj + 0, v_obj);
-            update_render_obj (r_obj + 1, v_obj);
-            update_render_obj (r_obj + 2, v_obj);
-            update_render_obj (r_obj + 3, v_obj);
-            update_render_obj (r_obj + 4, v_obj);
-            update_render_obj (r_obj + 5, v_obj);
+            update_render_obj (r_obj + 0, v_obj, h, w);
+            update_render_obj (r_obj + 1, v_obj, h, w);
+            update_render_obj (r_obj + 2, v_obj, h, w);
+            update_render_obj (r_obj + 3, v_obj, h, w);
+            update_render_obj (r_obj + 4, v_obj, h, w);
+            update_render_obj (r_obj + 5, v_obj, h, w);
         }
     }
 }
@@ -436,6 +512,12 @@ void update_word_render_list (world_obj *world)
 world_obj* make_world (int width, int height)
 {
     printf ("Building world of width %d, height %d\n", width, height);
+    phys_map[AIR] = air;
+    phys_map[SAND] = sand;
+    phys_map[WATER] = water;
+    phys_map[ROCK] = rock;
+    phys_map[LIGHT] = light;
+
     world_obj *world_out = (world_obj*)calloc (1, sizeof(world_obj));
     world_out->event_flag = true;
     world_out->event_time = 0.0f;
@@ -459,23 +541,13 @@ world_obj* make_world (int width, int height)
     update_word_render_list (world_out);
 
     glGenVertexArrays(1, &world_out->VAO);
-    glGenBuffers(1, &world_out->VBO);
-
     glBindVertexArray(world_out->VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, world_out->VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(render_obj)*width*height*6, world_out->render_list, GL_STATIC_DRAW);
 
-    // pos attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(render_obj), (void*)0);
-    glEnableVertexAttribArray(0);
-    
-    // reflect attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(render_obj), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    // radiation attribute
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(render_obj), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    glGenBuffers(1, &world_out->SSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, world_out->SSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(render_obj)*width*height*6, world_out->render_list, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, world_out->SSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 
     return world_out;
 }
@@ -488,9 +560,18 @@ void update_world (world_obj *world)
     update_word_render_list (world);
 }
 
-void render_world (world_obj *world)
+void render_world (world_obj *world, Shader *shader)
 {
+    shader->use();
+    glUniform1fv(glGetUniformLocation(shader->ID, "render_list"), world->width*world->height*6, (float*)world->render_list);
+    glUniform1i(glGetUniformLocation(shader->ID, "world_w"), world->width);
+    glUniform1i(glGetUniformLocation(shader->ID, "world_h"), world->height);
     glBindVertexArray(world->VAO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(render_obj)*world->width*world->height*6, world->render_list, GL_STATIC_DRAW);
+    
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, world->SSBO);
+    GLvoid* p = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+    memcpy(p, world->render_list, sizeof(render_obj)*world->width*world->height*6);
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+    
     glDrawArrays(GL_TRIANGLES, 0, world->height*world->width*6);
 }

@@ -13,13 +13,20 @@
 #include "falling_sand.h"
 
 unsigned long long global_ticks = 0;
-int inputs[5] = {0};
+MOUSE_BUTTON mouse_button_input = NONE;
+MATERIAL_TYPE selected_material = AIR;
+
+world_obj *world;
+
+int mouse_w_max = SCR_WIDTH, mouse_h_max = SCR_HEIGHT;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 int main()
 {
+
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
@@ -42,6 +49,7 @@ int main()
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -59,7 +67,7 @@ int main()
     // ------------------------------------------------------------------
 
     /*************************************/
-    world *world = make_world (WRD_WIDTH, WRD_HEIGHT);
+    world = make_world (WRD_WIDTH, WRD_HEIGHT);
 
     float last_time = 0.0;
 
@@ -77,18 +85,13 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // render the triangle
-        ourShader.use();
-        
         
         /**********Fill in the blank*********/
 
         update_world (world);
-        render_world (world);
+        render_world (world, &ourShader);
 
-        
         /*************************************/
-
-        
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -110,28 +113,42 @@ void processInput(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
 
     /**********Fill in the blank*********/
-    bzero (inputs, sizeof(inputs));
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
     {
-        inputs[0] = 1;
+        selected_material = AIR;
     }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
     {
-        inputs[1] = 1;
+        selected_material = SAND;
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
     {
-        inputs[2] = 1;
+        selected_material = WATER;
     }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
     {
-        inputs[3] = 1;
+        selected_material = ROCK;
     }
-    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
     {
-        inputs[4] = 1;
+        selected_material = LIGHT;
+    }
+    mouse_button_input = NONE;
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    {
+        mouse_button_input = LEFT;
+    }
+    else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+    {
+        mouse_button_input = RIGHT;
     }
     /*************************************/
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (world)
+        mouse_event (world, selected_material, mouse_button_input, mouse_w_max, mouse_h_max, xpos, ypos);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -140,6 +157,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
+    mouse_h_max = height;
+    mouse_w_max = width;
     glViewport(0, 0, width, height);
 }
-
