@@ -72,7 +72,7 @@ int main()
 
     TextRenderer  *Text;
     Text = new TextRenderer(SCR_WIDTH, SCR_HEIGHT);
-    Text->Load("./fonts/OCRAEXT.TTF", 24);
+    Text->Load("./fonts/ARIBL0.ttf", 24);
 
     world = make_world (WRD_WIDTH, WRD_HEIGHT);
 
