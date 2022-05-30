@@ -17,7 +17,7 @@
 #define SCR_RATIO 9/16
 #define SCR_HEIGHT (SCR_WIDTH*SCR_RATIO)
 
-#define WRD_WIDTH 192
+#define WRD_WIDTH 384
 #define WRD_HEIGHT (WRD_WIDTH*SCR_RATIO)
 
 #define VTX_SCALE 1.0f
@@ -85,11 +85,11 @@ struct world_obj
     float delta_time;
     int width;
     int height;
+    int brush_size;
 
     vertex_obj *vertex_list;
     render_obj *render_list;
-    render_obj *draw_list;
-
+    
     unsigned int TID, FBO, VAO, SSBO;
     unsigned int QUAD_VAO, QUAD_VBO;
 };
@@ -108,6 +108,8 @@ void update_world_physics (world_obj *world);
 void update_word_render_list (world_obj *world);
 
 world_obj* make_world (int width, int height);
+
+void free_world (world_obj *world);
 
 void update_world (world_obj *world);
 

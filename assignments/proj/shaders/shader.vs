@@ -31,8 +31,6 @@ vec3 raytrace (vec3 targ, vec3 org)
     int iter = 0;
     while (iter < world_h && length(delta) > 1.0)
     {
-        if (iter > world_w/4 && length(out_col) < 0.1)
-            break;
         int w = int(trace.x), h = int(trace.y);
         vec3 dir = normalize (vec3(delta.x, delta.y, 0.0));
 
@@ -64,20 +62,21 @@ void main()
     if (rtx_on == 1)
     {
         int trace_num = 1;
-        for (int w = 0; w < 1; w++)
+        for (int w = 0; w <= world_w; w += world_w/5)
         {
-            float d = float(world_w) / 48;
-            light += raytrace (pos, vec3 (w*d, 0, 0));
-            light += raytrace (pos, vec3 (w*d, world_h, 0));
-            light += raytrace (pos, vec3 (world_w - w*d, 0, 0));
-            light += raytrace (pos, vec3 (world_w - w*d, world_h, 0));
-            light += raytrace (pos, vec3 (world_w/2 - w*d + 5, 0, 0));
-            light += raytrace (pos, vec3 (world_w/2 - w*d + 5, world_h, 0));
-            trace_num += 6;
+            light += raytrace (pos, vec3 (w, 0, 0));
+            light += raytrace (pos, vec3 (w, world_h, 0));
+            trace_num += 2;
+        }
+        for (int h = 0; h <= world_h; h += world_h/3)
+        {
+            light += raytrace (pos, vec3 (0, h, 0));
+            light += raytrace (pos, vec3 (world_w, h, 0));
+            trace_num += 2;
         }
         light += raytrace (pos, vec3 (world_w, 0, 0));
         
-        light /= float(trace_num);
+        light /= float(trace_num * 6/7);
 
         light = (light + rad + vec3(0.1))*col*ref;
 

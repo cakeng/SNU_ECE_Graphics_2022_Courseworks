@@ -192,6 +192,23 @@ void generate_vertex(vertex_obj *vtx, physics_property *mat)
     *vtx = obj;
 }
 
+void generate_circle(world_obj *world, int w, int h, int r, physics_property *mat)
+{
+    int lasth;
+    for (int widx = -r; widx < r; widx++)
+    {
+        int hlen = (int)sqrt((float)r*r - widx*widx);
+        if (widx == 0)
+        {
+            hlen--;
+        }
+        for (int hidx = -hlen; hidx < hlen; hidx++)
+        {
+            generate_vertex (world, w + widx, h + hidx, mat);
+        }
+    }
+}
+
 void kinetic_engine (vertex_obj *vtx)
 {
     float dt = vtx->world->delta_time;
@@ -412,7 +429,6 @@ vertex_obj *move_vertex (vertex_obj *vtx)
 }
 
 
-
 void mouse_event (world_obj *world, MATERIAL_TYPE material, MOUSE_BUTTON button, int xmax, int ymax, float xoffset, float yoffset)
 {
     static float last_callback_time = 0.0f;
@@ -421,25 +437,33 @@ void mouse_event (world_obj *world, MATERIAL_TYPE material, MOUSE_BUTTON button,
         int w = (float)world->width * xoffset / xmax;
         int h = (float)world->height * yoffset / ymax;  
         last_callback_time = world->current_time;
-        for (int ih = 0; ih < MOUSE_BRUSH_SIZE; ih++)
+
+        int lasth;
+        int r = world->brush_size;
+        for (int widx = -r; widx < r; widx++)
         {
-            for (int iw = 0; iw < MOUSE_BRUSH_SIZE; iw++)
+            int hlen = (int)sqrt((float)r*r - widx*widx);
+            if (widx == 0)
+            {
+                hlen--;
+            }
+            for (int hidx = -hlen; hidx < hlen; hidx++)
             {
                 vertex_obj *targ = 
-                    get_vtx(world, w + iw - MOUSE_BRUSH_SIZE/2, h + ih - MOUSE_BRUSH_SIZE/2);
-                if (!targ)
-                    return;
-                if (button == RIGHT)
+                    get_vtx(world, w + widx, h + hidx);
+                if (targ)
                 {
-                    reset_vertex (targ);
-                }
-                else if (button == LEFT)
-                {
-                    generate_vertex (targ, phys_map[material]);
+                    if (button == RIGHT)
+                    {
+                        reset_vertex (targ);
+                    }
+                    else if (button == LEFT)
+                    {
+                        generate_vertex (targ, phys_map[material]);
+                    }
                 }
             }
         }
-        
     }
 }
 
@@ -449,11 +473,11 @@ void update_world_physics (world_obj *world)
 
     if (world->current_time > event_time[0] + 0.1)
     {
-        generate_vertex (world, world->width/2 - 20, 10, sand);
-        generate_vertex (world, world->width/2 + 20, 10, sand);
+        generate_vertex (world, world->width/2 - world->width/12, 10, sand);
+        generate_vertex (world, world->width/2 + world->width/12, 10, sand);
         generate_vertex (world, world->width/2, 10, water);
-        generate_vertex (world, world->width/2+2, 10, water);
-        generate_vertex (world, world->width/2-2, 10, water);
+        generate_vertex (world, world->width/2+4, 10, water);
+        generate_vertex (world, world->width/2-4, 10, water);
         event_time[0]= world->current_time;
     }
 
@@ -511,7 +535,7 @@ void update_word_render_list (world_obj *world)
 
 world_obj* make_world (int width, int height)
 {
-    printf ("Building world of width %d, height %d\n", width, height);
+    // printf ("Building world of width %d, height %d\n", width, height);
     phys_map[AIR] = air;
     phys_map[SAND] = sand;
     phys_map[WATER] = water;
@@ -526,6 +550,7 @@ world_obj* make_world (int width, int height)
     world_out->current_time = 0.0f;
     world_out->height = height;
     world_out->width = width;
+    world_out->brush_size = 5;
     world_out->vertex_list = (vertex_obj*)calloc (width*height, sizeof(vertex_obj));
     world_out->render_list = (render_obj*)calloc (width*height, sizeof(render_obj));
     int idx = 0;
@@ -539,15 +564,12 @@ world_obj* make_world (int width, int height)
             reset_vertex (v_obj);
         }
     }
-
-    for (int w = 0; w < 80; w++)
-        generate_vertex (world_out, world_out->width/2 - 40 + w, world_out->height - 20, rock);
-    for (int h = 0; h < 20; h++)
+    for (int h = 0; h < 3; h++)
     {
-        int wid = (h<10? 2*h : 40 - 2*h);
-        for (int w = 0; w < wid; w++)
-            generate_vertex (world_out, world_out->width - 14 - (wid/2) + w, 4 + h, light);
+        for (int w = 0; w < world_out->width/4; w++)
+            generate_vertex (world_out, world_out->width/2 - world_out->width/8 + w, world_out->height * 6/8 - h, rock);
     }
+    generate_circle (world_out, width*15/16-10, height/9+10, width/24, light);
 
     update_word_render_list (world_out);
 
@@ -591,6 +613,12 @@ world_obj* make_world (int width, int height)
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     return world_out;
+}
+
+void free_world (world_obj *world)
+{
+    free (world->vertex_list);
+    free (world->render_list);
 }
 
 void update_world (world_obj *world)

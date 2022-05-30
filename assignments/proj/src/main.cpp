@@ -20,15 +20,16 @@ physics_property *selected_phys = sand;
 world_obj *world;
 float current_time;
 
-int RTX_ON = 0;
+int RTX_ON = 1;
 int screen_w = SCR_WIDTH, screen_h = SCR_HEIGHT;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 char text_updated [128] = {0};
-char text_instr[] = "Left Mouse- generate materials, Right Mouse- remove materials.";
-char text_mats [] = "1- SAND, 2- WATER, 3- ROCK, 4- LAVA, 5- LIGHT, R- toggle RTX MODE.";
+char text_instr[] = "Left Mouse - Generate materials, Right Mouse - Remove materials.";
+char text_mats [] = "Keyboard: 1 - SAND, 2 - WATER, 3 - ROCK, 4 - LAVA, 5 - LIGHT, R - toggle RTX MODE, Q - Reset.";
 
 int main()
 {
@@ -56,6 +57,7 @@ int main()
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -103,7 +105,7 @@ int main()
         if (current_time - text_update_time > 0.33)
         {
             text_update_time = current_time;
-            sprintf (text_updated, "FPS: %2.3f, Material Selected: ", 1.0/dt);
+            sprintf (text_updated, "FPS: %2.3f, Brush Size: %d, Material Selected: ", 1.0/dt, world->brush_size);
             char *e_p = text_updated;
             while (*e_p != '\0')
                 e_p++;
@@ -196,6 +198,12 @@ void processInput(GLFWwindow* window)
         selected_material = LIGHT;
         selected_phys = light;
     }
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        world_obj *new_world = make_world (world->width, world->height);
+        free_world (world);
+        world = new_world;
+    }
     mouse_button_input = NONE;
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
     {
@@ -223,4 +231,16 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     screen_h = height;
     screen_w = width;
     glViewport(0, 0, width, height);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    if (world)
+    {
+        world->brush_size += yoffset;
+        if (world->brush_size < 2) 
+            world->brush_size = 2;
+        if (world->brush_size > world->height/4)
+            world->brush_size = world->height/4;
+    }
 }
