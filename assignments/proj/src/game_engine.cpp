@@ -4,7 +4,7 @@
 
 physics_property _air = {
     .state = GAS, .material = AIR
-    , .diffuse = {0.65, 0.65, 0.85}, .reflect = {0.025, 0.025, 0.03}, .radiate = {0.02, 0.02, 0.05} 
+    , .diffuse = {0.75, 0.75, 0.95}, .reflect = {0.035, 0.035, 0.05}, .radiate = {0.006, 0.005, 0.01} 
     , .mass = 0.05f, .drag = 0.01, .flow = 1.0f,
     .apply_displacement = true, .apply_gravity = false,};
 physics_property* air = &_air;
@@ -520,27 +520,10 @@ void update_word_render_list (world_obj *world)
         {
             vertex_obj *v_obj = get_vtx (world, w, h);
             v_obj->updated = false;
-            render_obj *r_obj = world->render_list + (v_obj - world->vertex_list)*6;
+            render_obj *r_obj = world->render_list + (v_obj - world->vertex_list);
             r_obj->pos.x = ((float)w*2.0 - world->width)/world->width;
             r_obj->pos.y = (-(float)h*2.0 + world->height)/world->height;
-            (r_obj + 1)->pos.x = r_obj->pos.x;
-            (r_obj + 1)->pos.y = r_obj->pos.y - (2.0/world->height)*VTX_SCALE;
-            (r_obj + 2)->pos.x = r_obj->pos.x + (2.0/world->width)*VTX_SCALE;
-            (r_obj + 2)->pos.y = r_obj->pos.y - (2.0/world->height)*VTX_SCALE;
-
-            (r_obj + 3)->pos.x = r_obj->pos.x;
-            (r_obj + 3)->pos.y = r_obj->pos.y;
-            (r_obj + 4)->pos.x = r_obj->pos.x + (2.0/world->width)*VTX_SCALE;
-            (r_obj + 4)->pos.y = r_obj->pos.y - (2.0/world->height)*VTX_SCALE;
-            (r_obj + 5)->pos.x = r_obj->pos.x + (2.0/world->width)*VTX_SCALE;
-            (r_obj + 5)->pos.y = r_obj->pos.y;
-            
-            update_render_obj (r_obj + 0, v_obj, h, w);
-            update_render_obj (r_obj + 1, v_obj, h, w);
-            update_render_obj (r_obj + 2, v_obj, h, w);
-            update_render_obj (r_obj + 3, v_obj, h, w);
-            update_render_obj (r_obj + 4, v_obj, h, w);
-            update_render_obj (r_obj + 5, v_obj, h, w);
+            update_render_obj (r_obj, v_obj, h, w);
         }
     }
 }
@@ -563,7 +546,7 @@ world_obj* make_world (int width, int height)
     world_out->height = height;
     world_out->width = width;
     world_out->vertex_list = (vertex_obj*)calloc (width*height, sizeof(vertex_obj));
-    world_out->render_list = (render_obj*)calloc (width*height*6, sizeof(render_obj));
+    world_out->render_list = (render_obj*)calloc (width*height, sizeof(render_obj));
     int idx = 0;
     for (int h = 0; h < height; h++)
     {
@@ -589,13 +572,43 @@ world_obj* make_world (int width, int height)
 
     glGenVertexArrays(1, &world_out->VAO);
     glBindVertexArray(world_out->VAO);
-
+    // SSBO for rendering data
     glGenBuffers(1, &world_out->SSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, world_out->SSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(render_obj)*width*height*6, world_out->render_list, GL_DYNAMIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(render_obj)*width*height, world_out->render_list, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, world_out->SSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
-
+    // Texture to store render output
+    glGenFramebuffers(1, &world_out->FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, world_out->FBO);
+    glGenTextures(1, &world_out->TID);
+    glBindTexture(GL_TEXTURE_2D, world_out->TID);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, world_out->width, world_out->height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, world_out->TID, 0);
+    GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        printf ("Framebuffer creation failed!\n");
+    
+    // Simple Quad VAO for final screen output
+    static const float quadVertices[] = {
+        // positions        // texture Coords
+        -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+        1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    };
+    glGenVertexArrays(1, &world_out->QUAD_VAO);
+    glGenBuffers(1, &world_out->QUAD_VBO);
+    glBindVertexArray(world_out->QUAD_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, world_out->QUAD_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     return world_out;
 }
 
@@ -607,18 +620,33 @@ void update_world (world_obj *world)
     update_word_render_list (world);
 }
 
-void render_world (world_obj *world, Shader *shader)
+void render_world (world_obj *world, Shader *shader, int rtx_on)
 {
     shader->use();
-    glUniform1fv(glGetUniformLocation(shader->ID, "render_list"), world->width*world->height*6, (float*)world->render_list);
+    glBindVertexArray(world->VAO);
+    glViewport(0, 0, world->width, world->height);
+    glBindFramebuffer(GL_FRAMEBUFFER, world->FBO);
+    glClear(GL_COLOR_BUFFER_BIT);
     glUniform1i(glGetUniformLocation(shader->ID, "world_w"), world->width);
     glUniform1i(glGetUniformLocation(shader->ID, "world_h"), world->height);
-    glBindVertexArray(world->VAO);
+    glUniform1i(glGetUniformLocation(shader->ID, "rtx_on"), rtx_on);
     
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, world->SSBO);
     GLvoid* p = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-    memcpy(p, world->render_list, sizeof(render_obj)*world->width*world->height*6);
+    memcpy(p, world->render_list, sizeof(render_obj)*world->width*world->height);
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     
-    glDrawArrays(GL_TRIANGLES, 0, world->height*world->width*6);
+    glDrawArrays(GL_POINTS, 0, world->height*world->width);
+}
+
+void draw_world (world_obj *world, Shader *shader, int scr_w, int scr_h)
+{
+    shader->use();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, world->TID);
+    glBindVertexArray(world->QUAD_VAO);
+    glViewport(0, 0, scr_w, scr_h);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
 }

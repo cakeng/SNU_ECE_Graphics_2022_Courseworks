@@ -17,7 +17,7 @@
 #define SCR_RATIO 3/4
 #define SCR_HEIGHT (SCR_WIDTH*SCR_RATIO)
 
-#define WRD_WIDTH 168
+#define WRD_WIDTH 192
 #define WRD_HEIGHT (WRD_WIDTH*SCR_RATIO)
 
 #define VTX_SCALE 1.0f
@@ -85,13 +85,13 @@ struct world_obj
     float delta_time;
     int width;
     int height;
-    // Physics Engine
-    vertex_obj* vertex_list;
 
-    // Rendering Engine
+    vertex_obj *vertex_list;
     render_obj *render_list;
+    render_obj *draw_list;
 
-    unsigned int VBO, VAO, SSBO;
+    unsigned int TID, FBO, VAO, SSBO;
+    unsigned int QUAD_VAO, QUAD_VBO;
 };
 
 extern physics_property* air;
@@ -108,6 +108,8 @@ world_obj* make_world (int width, int height);
 
 void update_world (world_obj *world);
 
-void render_world (world_obj *world, Shader *shader);
+void render_world (world_obj *world, Shader *shader, int rtx_on);
+
+void draw_world (world_obj *world, Shader *shader, int scr_w, int scr_h);
 
 #endif

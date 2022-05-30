@@ -17,8 +17,10 @@ MOUSE_BUTTON mouse_button_input = NONE;
 MATERIAL_TYPE selected_material = SAND;
 
 world_obj *world;
+float current_time;
 
-int mouse_w_max = SCR_WIDTH, mouse_h_max = SCR_HEIGHT;
+int RTX_ON = 0;
+int screen_w = SCR_WIDTH, screen_h = SCR_HEIGHT;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -61,8 +63,8 @@ int main()
 
     // build and compile our shader program
     // ------------------------------------
-    Shader ourShader("./shaders/shader.vs", "./shaders/shader.fs"); // you can name your shader files however you like
-
+    Shader renderShader("./shaders/shader.vs", "./shaders/shader.fs"); // you can name your shader files however you like
+    Shader drawShader("./shaders/draw_shader.vs", "./shaders/draw_shader.fs");
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
 
@@ -75,6 +77,7 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+        current_time = glfwGetTime();
         // input
         // -----
         processInput(window);
@@ -89,7 +92,8 @@ int main()
         /**********Fill in the blank*********/
 
         update_world (world);
-        render_world (world, &ourShader);
+        render_world (world, &renderShader, RTX_ON);
+        draw_world (world, &drawShader, screen_w, screen_h);
 
         /*************************************/
 
@@ -113,6 +117,15 @@ void processInput(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
 
     /**********Fill in the blank*********/
+    static float rtx_last_time = 0.0;
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+    {
+        if (current_time - rtx_last_time > 0.2)
+        {
+            rtx_last_time = current_time;
+            RTX_ON ^= 1;
+        }
+    }
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
     {
         selected_material = SAND;
@@ -148,7 +161,7 @@ void processInput(GLFWwindow* window)
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (world)
-        mouse_event (world, selected_material, mouse_button_input, mouse_w_max, mouse_h_max, xpos, ypos);
+        mouse_event (world, selected_material, mouse_button_input, screen_w, screen_h, xpos, ypos);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -157,7 +170,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
-    mouse_h_max = height;
-    mouse_w_max = width;
+    screen_h = height;
+    screen_w = width;
     glViewport(0, 0, width, height);
 }

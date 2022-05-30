@@ -1,81 +1,8 @@
 #version 430 core
 out vec4 FragColor;
-flat in int vertexId;
-struct render_obj
-{
-    float pos[3];
-    float vpos[3];
-    float reflect[3]; 
-    float radiation[3];
-    float col[3];
-};
-
-layout(std430, binding = 1) buffer Points{
-    render_obj data[];
-};
-uniform int world_w;
-uniform int world_h;
-
-render_obj get_obj (vec3 loc)
-{
-    return data[(int(loc.y)*world_w + int(loc.x))*6];
-}
-
-vec3 raytrace (vec3 targ, vec3 org)
-{
-    vec3 out_col = vec3(0.0);
-    vec3 delta = targ - org;
-    vec3 trace = org;
-    int iter = 0;
-    while (iter < world_w + world_h && length(delta) > 1.0)
-    {
-        if (iter > world_w/6 && length(out_col) < 0.1)
-            break;
-        int w = int(trace.x), h = int(trace.y);
-        vec3 dir = normalize (vec3(delta.x, delta.y, 0.0));
-
-        render_obj trace_obj = get_obj(trace);
-        vec3 ref_factor = vec3 (trace_obj.reflect[0], trace_obj.reflect[1], trace_obj.reflect[2]);
-        vec3 rad_factor = vec3 (trace_obj.radiation[0], trace_obj.radiation[1], trace_obj.radiation[2]);
-        vec3 col_factor = vec3 (trace_obj.col[0], trace_obj.col[1], trace_obj.col[2]);
-        out_col = out_col*(1-ref_factor) + (out_col + rad_factor)*col_factor*ref_factor;
-
-        trace = trace + dir*1.414;
-        delta = targ - trace;
-        iter++;
-    }
-    return out_col;
-}
+in vec3 vtxCol;
 
 void main()
 {
-    render_obj obj = data[vertexId];
-
-    vec3 pos = vec3 (obj.vpos[0], obj.vpos[1], obj.vpos[2]);
-    vec3 ref = vec3 (obj.reflect[0], obj.reflect[1], obj.reflect[2]);
-    vec3 rad = vec3 (obj.radiation[0], obj.radiation[1], obj.radiation[2]);
-    vec3 col = vec3 (obj.col[0], obj.col[1], obj.col[2]);
-
-    vec3 light = vec3 (0.0);
-
-    light += raytrace (pos, vec3 (0, 0, 0));
-    light += raytrace (pos, vec3 (float(world_w)/2, 0, 0));
-    light += raytrace (pos, vec3 (world_w, 0, 0));
-    light += raytrace (pos, vec3 (0, world_h, 0));
-    light += raytrace (pos, vec3 (float(world_w)/2, world_h, 0));
-    light += raytrace (pos, vec3 (world_w, world_h, 0));
-    light += raytrace (pos, vec3 (0, float(world_h)/2, 0));
-    light += raytrace (pos, vec3 (world_w, float(world_h)/2, 0));
-    // light += raytrace (pos, vec3 (world_w, world_h, 0));
-    // light += raytrace (pos, vec3 (0, world_h, 0));
-    light /= 8.0;
-
-    light = (light + rad + vec3(0.1))*col*ref;
-
-    if (length(light) < 0.1)
-    {
-        light += vec3 (0.015, 0.015, 0.03);
-    }
-
-    FragColor = vec4 (light, 0.0);
+    FragColor = vec4 (vtxCol, 0.0);
 }
