@@ -13,8 +13,8 @@
 
 #include "shader.h"
 
-#define SCR_WIDTH 1200
-#define SCR_RATIO 3/4
+#define SCR_WIDTH 1920
+#define SCR_RATIO 9/16
 #define SCR_HEIGHT (SCR_WIDTH*SCR_RATIO)
 
 #define WRD_WIDTH 192
@@ -98,6 +98,9 @@ extern physics_property* air;
 extern physics_property* sand;
 extern physics_property* water;
 extern physics_property* steam;
+extern physics_property* rock;
+extern physics_property* fire;
+extern physics_property* light;
 
 void mouse_event (world_obj *world, MATERIAL_TYPE material, MOUSE_BUTTON button, int xmax, int ymax, float xoffset, float yoffset);
 void update_world_physics (world_obj *world);

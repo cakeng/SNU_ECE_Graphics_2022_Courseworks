@@ -456,25 +456,6 @@ void update_world_physics (world_obj *world)
         generate_vertex (world, world->width/2-2, 10, water);
         event_time[0]= world->current_time;
     }
-    if (world->current_time > event_time[2] + 0.5)
-    {
-        printf ("FPS: %3.2f, ct: %2.1f dt: %2.4f\n", 1.0/world->delta_time, world->current_time, world->delta_time);
-
-        // vertex_obj *vtx = world->vertex_list;
-        // for (int i = 0; i < world->height*world->width; i++)
-        // {
-        //     if (vtx->phys_prop == sand)
-        //     {
-        //         printf ("VTX w: %d, h: %d, ", i/world->width, i%world->width);
-        //         print_vertex (vtx);
-        //         int dh = vtx->vel.y * vtx->world->delta_time * MOV_SCALE;
-        //         printf ("float dh: %3.3f, dh: %d\n", vtx->vel.y * vtx->world->delta_time  * MOV_SCALE, dh);
-        //     }
-        //     vtx++;
-        // }
-        event_time[2] = world->current_time;
-    }
-
 
     int num_threads = std::thread::hardware_concurrency();
     num_threads = num_threads > 0 ? num_threads : 1;
@@ -643,7 +624,8 @@ void draw_world (world_obj *world, Shader *shader, int scr_w, int scr_h)
 {
     shader->use();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(glGetUniformLocation(shader->ID, "colorMap"), 1);
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, world->TID);
     glBindVertexArray(world->QUAD_VAO);
     glViewport(0, 0, scr_w, scr_h);

@@ -1432,15 +1432,15 @@ detail/setup.hpp
 detail/func_vector_relational.inl
 ../../../includes/glm/detail/func_vector_relational.inl
 
-/home/cakeng/builds/graphics_programming/assignments/hw1/problem2/src/gameobjects.h
+/home/cakeng/build/graphics_2022/assignments/hw1/problem2/src/gameobjects.h
 glm/glm.hpp
 -
 math_utils.h
-/home/cakeng/builds/graphics_programming/assignments/hw1/problem2/src/math_utils.h
+/home/cakeng/build/graphics_2022/assignments/hw1/problem2/src/math_utils.h
 
-/home/cakeng/builds/graphics_programming/assignments/hw1/problem2/src/geometry_primitives.h
+/home/cakeng/build/graphics_2022/assignments/hw1/problem2/src/geometry_primitives.h
 
-/home/cakeng/builds/graphics_programming/assignments/hw1/problem2/src/main.cpp
+/home/cakeng/build/graphics_2022/assignments/hw1/problem2/src/main.cpp
 glad/glad.h
 -
 GLFW/glfw3.h
@@ -1452,25 +1452,25 @@ glm/gtx/transform.hpp
 glm/gtc/type_ptr.hpp
 -
 shader.h
-/home/cakeng/builds/graphics_programming/assignments/hw1/problem2/src/shader.h
+/home/cakeng/build/graphics_2022/assignments/hw1/problem2/src/shader.h
 gameobjects.h
-/home/cakeng/builds/graphics_programming/assignments/hw1/problem2/src/gameobjects.h
+/home/cakeng/build/graphics_2022/assignments/hw1/problem2/src/gameobjects.h
 geometry_primitives.h
-/home/cakeng/builds/graphics_programming/assignments/hw1/problem2/src/geometry_primitives.h
+/home/cakeng/build/graphics_2022/assignments/hw1/problem2/src/geometry_primitives.h
 iostream
 -
 vector
 -
 text_renderer.h
-/home/cakeng/builds/graphics_programming/assignments/hw1/problem2/src/text_renderer.h
+/home/cakeng/build/graphics_2022/assignments/hw1/problem2/src/text_renderer.h
 
-/home/cakeng/builds/graphics_programming/assignments/hw1/problem2/src/math_utils.h
+/home/cakeng/build/graphics_2022/assignments/hw1/problem2/src/math_utils.h
 iostream
 -
 vector
 -
 
-/home/cakeng/builds/graphics_programming/assignments/hw1/problem2/src/shader.h
+/home/cakeng/build/graphics_2022/assignments/hw1/problem2/src/shader.h
 glad/glad.h
 -
 glm/glm.hpp
@@ -1484,7 +1484,7 @@ sstream
 iostream
 -
 
-/home/cakeng/builds/graphics_programming/assignments/hw1/problem2/src/text_renderer.h
+/home/cakeng/build/graphics_2022/assignments/hw1/problem2/src/text_renderer.h
 map
 -
 glad/glad.h
@@ -1492,5 +1492,5 @@ glad/glad.h
 glm/glm.hpp
 -
 shader.h
-/home/cakeng/builds/graphics_programming/assignments/hw1/problem2/src/shader.h
+/home/cakeng/build/graphics_2022/assignments/hw1/problem2/src/shader.h
 

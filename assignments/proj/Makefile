@@ -204,6 +204,33 @@ src/main.cpp.s:
 	$(MAKE) -f CMakeFiles/falling_sand.dir/build.make CMakeFiles/falling_sand.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/text_renderer.o: src/text_renderer.cpp.o
+
+.PHONY : src/text_renderer.o
+
+# target to build an object file
+src/text_renderer.cpp.o:
+	$(MAKE) -f CMakeFiles/falling_sand.dir/build.make CMakeFiles/falling_sand.dir/src/text_renderer.cpp.o
+.PHONY : src/text_renderer.cpp.o
+
+src/text_renderer.i: src/text_renderer.cpp.i
+
+.PHONY : src/text_renderer.i
+
+# target to preprocess a source file
+src/text_renderer.cpp.i:
+	$(MAKE) -f CMakeFiles/falling_sand.dir/build.make CMakeFiles/falling_sand.dir/src/text_renderer.cpp.i
+.PHONY : src/text_renderer.cpp.i
+
+src/text_renderer.s: src/text_renderer.cpp.s
+
+.PHONY : src/text_renderer.s
+
+# target to generate assembly for a file
+src/text_renderer.cpp.s:
+	$(MAKE) -f CMakeFiles/falling_sand.dir/build.make CMakeFiles/falling_sand.dir/src/text_renderer.cpp.s
+.PHONY : src/text_renderer.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -222,6 +249,9 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/text_renderer.o"
+	@echo "... src/text_renderer.i"
+	@echo "... src/text_renderer.s"
 .PHONY : help
 
 
