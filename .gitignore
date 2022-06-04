@@ -1,0 +1,12 @@
+﻿################################################################################
+# 이 .gitignore 파일은 Microsoft(R) Visual Studio에서 자동으로 만들어졌습니다.
+################################################################################
+
+/assignments/proj/falling_sand.ilk
+/assignments/proj/.vs
+/.vs
+/assignments/proj/falling_sand.pdb
+/assignments/proj/out/build/x64-Debug
+/assignments/proj/out/build/x64-Release
+/assignments/proj/CMakeSettings.json
+*.manifest

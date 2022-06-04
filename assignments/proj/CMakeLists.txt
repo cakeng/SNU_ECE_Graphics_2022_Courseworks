@@ -19,7 +19,8 @@ link_directories(${PROJECT_ORIGIN}/lib)
 
 if(WIN32)
   set(LIBS glfw3 opengl32 freetype)
-  list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
+  set(CMAKE_CXX_STANDARD 20)
+  list(APPEND CMAKE_CXX_FLAGS "-std=c++20")
 endif(WIN32)
 
 if(UNIX)
