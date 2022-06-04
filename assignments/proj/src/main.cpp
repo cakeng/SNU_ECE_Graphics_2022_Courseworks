@@ -29,7 +29,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 char text_updated [128] = {0};
 char text_instr[] = "Left Mouse - Generate materials, Right Mouse - Remove materials.";
-char text_mats [] = "Keyboard: 1 - SAND, 2 - WATER, 3 - ROCK, 4 - LAVA, 5 - LIGHT, R - toggle RTX MODE, Q - Reset.";
+char text_mats [] = "Keyboard: 1 - SAND, 2 - WATER, 3 - ROCK, 4 - LAVA, 5 - LIGHT, 6 - External Image.";
+char text_other[] = "R - toggle RTX MODE, Q - Reset.";
 
 int main()
 {
@@ -120,11 +121,14 @@ int main()
             case ROCK:
                 sprintf (e_p, "ROCK");
                 break;
-            case FIRE:
+            case LAVA:
                 sprintf (e_p, "LAVA");
                 break;
             case LIGHT:
                 sprintf (e_p, "LIGHT");
+                break;
+            case MARIO:
+                sprintf(e_p, "EXT_IMG");
                 break;
             default:
                 break;
@@ -135,11 +139,13 @@ int main()
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, screen_w, screen_h);
-        Text->RenderText(std::string(text_instr), -0.0f, -0.0f, 1.0f
+        Text->RenderText(std::string(text_instr), -0.0f, -0.01f, 0.7f
             , glm::vec3(0.6f, 0.4f, 0.75f), selected_phys->diffuse);
-        Text->RenderText(std::string(text_mats), -0.0f, -0.06f, 1.0f
+        Text->RenderText(std::string(text_mats), -0.0f, -0.08f, 0.7f
             , glm::vec3(0.6f, 0.4f, 0.75f), selected_phys->diffuse);
-        Text->RenderText(std::string(text_updated), -0.0f, -0.12f, 1.0f
+        Text->RenderText(std::string(text_updated), -0.0f, -0.16f, 0.7f
+            , glm::vec3(0.6f, 0.4f, 0.75f), selected_phys->diffuse);
+        Text->RenderText(std::string(text_other), -0.0f, -0.24f, 0.7f
             , glm::vec3(0.6f, 0.4f, 0.75f), selected_phys->diffuse);
         glDisable(GL_CULL_FACE);
         glDisable(GL_BLEND);
@@ -190,13 +196,18 @@ void processInput(GLFWwindow* window)
     }
     if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
     {
-        selected_material = FIRE;
-        selected_phys = fire;
+        selected_material = LAVA;
+        selected_phys = lava;
     }
     if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)
     {
         selected_material = LIGHT;
         selected_phys = light;
+    }
+    if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS)
+    {
+        selected_material = MARIO;
+        selected_phys = mario;
     }
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
     {

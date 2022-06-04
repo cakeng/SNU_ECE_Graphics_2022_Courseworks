@@ -105,7 +105,7 @@ void TextRenderer::RenderText(std::string text, float x, float y, float scale
     // activate corresponding render state	
     this->TextShader.use();
     this->TextShader.setVec3("textColor", color);
-    this->TextShader.setMat4("translation", glm::translate (glm::mat4(1.0f), glm::vec3(x, y, 0.0)));
+    this->TextShader.setMat4("translation", glm::translate (glm::mat4(1.0f), glm::vec3(x* scale, y* scale, 0.0)));
     // this->TextShader.setInt("text", 1);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(this->VAO);

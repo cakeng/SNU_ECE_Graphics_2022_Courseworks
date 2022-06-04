@@ -29,10 +29,12 @@ vec3 raytrace (vec3 targ, vec3 org)
     vec3 delta = targ - org;
     vec3 trace = org;
     int iter = 0;
-    while (iter < world_h && length(delta) > 1.0)
+    while (iter < world_w && length(delta) > 1.0)
     {
         int w = int(trace.x), h = int(trace.y);
         vec3 dir = normalize (vec3(delta.x, delta.y, 0.0));
+        if (iter > world_w/3 && length(out_col) < 0.1)
+            return out_col;
 
         render_obj trace_obj = get_obj(trace);
         vec3 ref_factor = vec3 (trace_obj.reflect[0], trace_obj.reflect[1], trace_obj.reflect[2]);
@@ -62,13 +64,13 @@ void main()
     if (rtx_on == 1)
     {
         int trace_num = 1;
-        for (int w = 0; w <= world_w; w += world_w/5)
+        for (int w = 0; w <= world_w; w += world_w/4)
         {
             light += raytrace (pos, vec3 (w, 0, 0));
             light += raytrace (pos, vec3 (w, world_h, 0));
             trace_num += 2;
         }
-        for (int h = 0; h <= world_h; h += world_h/3)
+        for (int h = world_h/3; h <= world_h*2/3; h += world_h/3)
         {
             light += raytrace (pos, vec3 (0, h, 0));
             light += raytrace (pos, vec3 (world_w, h, 0));

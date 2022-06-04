@@ -13,11 +13,11 @@
 
 #include "shader.h"
 
-#define SCR_WIDTH 1920
+#define SCR_WIDTH 1280
 #define SCR_RATIO 9/16
 #define SCR_HEIGHT (SCR_WIDTH*SCR_RATIO)
 
-#define WRD_WIDTH 384
+#define WRD_WIDTH 288
 #define WRD_HEIGHT (WRD_WIDTH*SCR_RATIO)
 
 #define VTX_SCALE 1.0f
@@ -35,7 +35,7 @@ typedef struct int3 int3;
 typedef struct world_obj world_obj;
 
 typedef enum MOUSE_BUTTON {NONE, LEFT, RIGHT} MOUSE_BUTTON;
-typedef enum MATERIAL_TYPE {AIR, SAND, WATER, STEAM, FIRE, ROCK, LIGHT} MATERIAL_TYPE;
+typedef enum MATERIAL_TYPE {AIR, SAND, WATER, STEAM, LAVA, ROCK, LIGHT, MARIO} MATERIAL_TYPE;
 typedef enum _TYPE {GAS, LIQUID, SOLID} _TYPE;
 
 struct physics_property 
@@ -63,6 +63,8 @@ struct vertex_obj
     glm::vec3 col;
     physics_property *phys_prop;
     world_obj *world;
+    bool apply_displacement;
+    bool apply_gravity;
     glm::vec3 force;
     glm::vec3 vel; 
     glm::vec3 mov;
@@ -92,6 +94,9 @@ struct world_obj
     
     unsigned int TID, FBO, VAO, SSBO;
     unsigned int QUAD_VAO, QUAD_VBO;
+
+    vertex_obj* extern_obj;
+    int extern_obj_w, extern_obj_h;
 };
 
 extern physics_property* air;
@@ -99,8 +104,9 @@ extern physics_property* sand;
 extern physics_property* water;
 extern physics_property* steam;
 extern physics_property* rock;
-extern physics_property* fire;
+extern physics_property* lava;
 extern physics_property* light;
+extern physics_property* mario;
 
 void mouse_event (world_obj *world, MATERIAL_TYPE material, MOUSE_BUTTON button, int xmax, int ymax, float xoffset, float yoffset);
 void update_world_physics (world_obj *world);

@@ -4,7 +4,7 @@
 
 physics_property _air = {
     .state = GAS, .material = AIR
-    , .diffuse = {0.75, 0.75, 0.95}, .reflect = {0.035, 0.035, 0.05}, .radiate = {0.006, 0.005, 0.01} 
+    , .diffuse = {0.75, 0.75, (float)243/256}, .reflect = {0.035, 0.035, 0.05}, .radiate = {0.006, 0.005, 0.01} 
     , .mass = 0.05f, .drag = 0.01, .flow = 1.0f,
     .apply_displacement = true, .apply_gravity = false,};
 physics_property* air = &_air;
@@ -28,22 +28,28 @@ physics_property _steam = {
 physics_property* steam = &_steam;
 physics_property _rock = {
     .state = SOLID,.material = ROCK
-    , .diffuse = {0.43, 0.41, 0.42}, .reflect = {0.99, 0.99, 0.99}, .radiate = {0.0, 0.0, 0.0}  
+    , .diffuse = {(float)110 / 256, (float)103 / 256, (float)105 / 256}, .reflect = {0.99, 0.99, 0.99}, .radiate = {0.0, 0.0, 0.0}
     , .mass = 15.0f, .drag = 1.0, .flow = 1.0f,
     .apply_displacement = false, .apply_gravity = true,};
 physics_property* rock = &_rock;
-physics_property _fire = {
-    .state = LIQUID,.material = FIRE
+physics_property _lava = {
+    .state = LIQUID,.material = LAVA
     , .diffuse = {1.0, 0.55, 0.3}, .reflect = {1.0, 0.85, 0.6} , .radiate = {0.88, 0.95, 0.3}
     , .mass = 0.08f, .drag = 1.0, .flow = 1.5f,
     .apply_displacement = true, .apply_gravity = true,};
-physics_property* fire = &_fire;
+physics_property* lava = &_lava;
 physics_property _light = {
     .state = SOLID,.material = LIGHT
     , .diffuse = {1.0, 1.0, 1.0}, .reflect = {1.0, 1.0, 1.0} , .radiate = {1.0, 0.98, 0.95}
     , .mass = 15.0f, .drag = 1.0, .flow = 1.0f,
     .apply_displacement = false, .apply_gravity = false,};
 physics_property* light = &_light;
+physics_property _mario = {
+    .state = SOLID,.material = MARIO
+    , .diffuse = {0.7, 0.4, 0.7}, .reflect = {0.4, 0.4, 0.4} , .radiate = {0.0, 0.0, 0.0}
+    , .mass = 6.0f, .drag = 1.0, .flow = 1.0f,
+    .apply_displacement = false, .apply_gravity = false, };
+physics_property* mario = &_mario;
 
 physics_property *phys_map[1024] = {NULL};
 
@@ -141,7 +147,7 @@ bool swap_vertex (vertex_obj *vtx1, vertex_obj* vtx2)
 {
     if (vtx1->phys_prop == vtx2->phys_prop)
         return false;
-    if (!(vtx1->phys_prop->apply_displacement && vtx2->phys_prop->apply_displacement))
+    if (!(vtx1->apply_displacement && vtx2->apply_displacement))
         return false;
     vertex_obj temp;
     temp = *vtx1;
@@ -149,16 +155,27 @@ bool swap_vertex (vertex_obj *vtx1, vertex_obj* vtx2)
     *vtx2 = temp;
     return true;
 }
+void update_vtx_phys(vertex_obj* vtx, physics_property* phys)
+{
+    vtx->phys_prop = phys;
+    vtx->apply_displacement = vtx->phys_prop->apply_displacement;
+    vtx->apply_gravity = vtx->phys_prop->apply_gravity;
+    vtx->col = phys->diffuse;
+}
+
 
 void reset_vertex (vertex_obj *vtx)
 {
     vtx->updated = false;
-    vtx->phys_prop = air;
+    update_vtx_phys(vtx,  air);
     vtx->force = glm::vec3(0.0);
     vtx->vel = glm::vec3(0.0);
     vtx->mov = glm::vec3(0.0);
     vtx->col = vtx->phys_prop->diffuse;
+    vtx->apply_displacement = vtx->phys_prop->apply_displacement;
+    vtx->apply_gravity = vtx->phys_prop->apply_gravity;
 }
+
 
 void print_vertex (vertex_obj *vtx)
 {
@@ -176,7 +193,7 @@ void generate_vertex(world_obj *world, int w, int h, physics_property *mat)
     reset_vertex (&obj);
     obj.col = mat->diffuse;
     obj.world = world;
-    obj.phys_prop = mat;
+    update_vtx_phys(&obj, mat);
     *get_vtx(world, w, h) = obj;
 }
 
@@ -188,7 +205,7 @@ void generate_vertex(vertex_obj *vtx, physics_property *mat)
     reset_vertex (&obj);
     obj.col = mat->diffuse;
     obj.world = vtx->world;
-    obj.phys_prop = mat;
+    update_vtx_phys(&obj, mat);
     *vtx = obj;
 }
 
@@ -214,16 +231,8 @@ void kinetic_engine (vertex_obj *vtx)
     float dt = vtx->world->delta_time;
     int w = vtx_w(vtx), h = vtx_h(vtx);
     physics_property *v_phys = vtx->phys_prop;
-    if (!v_phys->apply_displacement)
-    {
-        vtx->vel = glm::vec3(0.0f);
-        vtx->mov - glm::vec3(0.0f);
-        return;
-    }
-    if (!v_phys->apply_gravity)
-        return;
 
-    if (v_phys->material == FIRE)
+    if (v_phys->material == LAVA)
     {
         bool rockd = false;
         vertex_obj* rock_targ = u_vtx (vtx);
@@ -259,6 +268,66 @@ void kinetic_engine (vertex_obj *vtx)
             return;
         }
     }
+    else if (v_phys->material == STEAM)
+    {
+        vertex_obj *d_obj = d_vtx(vtx);
+        vertex_obj* l_obj = l_vtx(vtx);
+        vertex_obj* r_obj = r_vtx(vtx);
+        if (d_obj && d_obj->phys_prop->material == STEAM &&
+            l_obj && l_obj->phys_prop->material == STEAM &&
+            r_obj && r_obj->phys_prop->material == STEAM)
+        {
+            reset_vertex(d_obj);
+            reset_vertex(r_obj);
+            reset_vertex(l_obj);
+            generate_vertex(vtx, water);
+        }
+    }
+    else if (v_phys->material == MARIO)
+    {
+        if (vtx->apply_gravity == true)
+        {
+            vertex_obj* l_obj = l_vtx(vtx);
+            vertex_obj* r_obj = r_vtx(vtx);
+            if (l_obj && l_obj->phys_prop->material == MARIO && (ul_vtx(vtx) && ul_vtx(vtx)->phys_prop->material != MARIO))
+            {
+                l_obj->apply_displacement = true;
+                l_obj->apply_gravity = true;
+            }
+            if (r_obj && r_obj->phys_prop->material == MARIO && (ur_vtx(vtx) && ur_vtx(vtx)->phys_prop->material != MARIO))
+            {
+                r_obj->apply_displacement = true;
+                r_obj->apply_gravity = true;
+            }
+        }
+        else
+        {
+            float total_weight = 0;
+            vertex_obj* u_obj = u_vtx(vtx);
+            while (u_obj != NULL && u_obj->phys_prop->state == SOLID)
+            {
+                if (u_obj->apply_gravity == false)
+                    total_weight -= INFINITY;
+                else
+                    total_weight += u_obj->phys_prop->mass;
+                u_obj = u_vtx(u_obj);
+            }
+            if (total_weight > 50)
+            {
+                vtx->apply_displacement = true;
+                vtx->apply_gravity = true;
+            }
+        }
+    }
+
+    if (!vtx->apply_displacement)
+    {
+        vtx->vel = glm::vec3(0.0f);
+        vtx->mov - glm::vec3(0.0f);
+        return;
+    }
+    if (!vtx->apply_gravity)
+        return;
     
     // Gravity
     vertex_obj *grav_targ = NULL;
@@ -440,26 +509,53 @@ void mouse_event (world_obj *world, MATERIAL_TYPE material, MOUSE_BUTTON button,
 
         int lasth;
         int r = world->brush_size;
-        for (int widx = -r; widx < r; widx++)
+
+        if (material != MARIO)
         {
-            int hlen = (int)sqrt((float)r*r - widx*widx);
-            if (widx == 0)
+            for (int widx = -r; widx < r; widx++)
             {
-                hlen--;
-            }
-            for (int hidx = -hlen; hidx < hlen; hidx++)
-            {
-                vertex_obj *targ = 
-                    get_vtx(world, w + widx, h + hidx);
-                if (targ)
+                int hlen = (int)sqrt((float)r * r - widx * widx);
+                if (widx == 0)
                 {
-                    if (button == RIGHT)
+                    hlen--;
+                }
+                for (int hidx = -hlen; hidx < hlen; hidx++)
+                {
+                    vertex_obj* targ =
+                        get_vtx(world, w + widx, h + hidx);
+                    if (targ)
                     {
-                        reset_vertex (targ);
+                        if (button == RIGHT)
+                        {
+                            reset_vertex(targ);
+                        }
+                        else if (button == LEFT)
+                        {
+                            generate_vertex(targ, phys_map[material]);
+                        }
                     }
-                    else if (button == LEFT)
+                }
+            }
+        }
+        else
+        {
+            for (int hidx = -4; hidx < world->extern_obj_h + 4; hidx++)
+            {
+                for (int widx = -4; widx < world->extern_obj_w + 4; widx++)
+                {
+                    vertex_obj* targ = get_vtx(world, w + widx, h + hidx);
+                    if ((hidx >= 0 && hidx < world->extern_obj_h) && (widx >= 0 && widx < world->extern_obj_w))
                     {
-                        generate_vertex (targ, phys_map[material]);
+                        vertex_obj* ex_obj = world->extern_obj + hidx * world->extern_obj_w + widx;
+                        if (targ && world->extern_obj)
+                        {
+                            generate_vertex(targ, ex_obj->phys_prop);
+                            targ->col = ex_obj->col;
+                        }
+                    }
+                    else if (targ)
+                    {
+                        reset_vertex(targ);
                     }
                 }
             }
@@ -505,32 +601,130 @@ void update_world_physics (world_obj *world)
             }
         }
     }
-    
+
 }
 
-void update_render_obj (render_obj* r_obj, vertex_obj *v_obj, int h, int w)
+void update_render_obj(render_obj* r_obj, vertex_obj* v_obj, int h, int w)
 {
     r_obj->col = v_obj->col;
     r_obj->reflect = v_obj->phys_prop->reflect;
     r_obj->radiation = v_obj->phys_prop->radiate;
-    r_obj->vpos = glm::vec3 (w, h, 0.0);
+    r_obj->vpos = glm::vec3(w, h, 0.0);
 }
 
-void update_word_render_list (world_obj *world)
+void update_word_render_list(world_obj* world)
 {
-    #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
     for (int h = 0; h < world->height; h++)
     {
         for (int w = 0; w < world->width; w++)
         {
-            vertex_obj *v_obj = get_vtx (world, w, h);
+            vertex_obj* v_obj = get_vtx(world, w, h);
             v_obj->updated = false;
-            render_obj *r_obj = world->render_list + (v_obj - world->vertex_list);
-            r_obj->pos.x = ((float)w*2.0 - world->width)/world->width;
-            r_obj->pos.y = (-(float)h*2.0 + world->height)/world->height;
-            update_render_obj (r_obj, v_obj, h, w);
+            render_obj* r_obj = world->render_list + (v_obj - world->vertex_list);
+            r_obj->pos.x = ((float)w * 2.0 - world->width) / world->width;
+            r_obj->pos.y = (-(float)h * 2.0 + world->height) / world->height;
+            update_render_obj(r_obj, v_obj, h, w);
         }
     }
+}
+
+void load_extern_obj(world_obj* world)
+{
+    FILE* f = fopen("extern_img.bmp", "rb");
+    if (f == NULL)
+    {
+        printf("External image does not exist.\n");
+        world->extern_obj = NULL;
+        world->extern_obj_h = 0;
+        world->extern_obj_w = 0;
+        return;
+    }
+
+    int32_t file_size, px_arr_offset, dib_header_size;
+    uint16_t bits_per_pixel;
+    char* file_dump = NULL, * pixel_ptr = NULL;
+    bool is_height_reversed = false;
+
+
+    char header[14] = { 0 };
+    fread(header, sizeof(char), 14, f);
+    if (!(*header == 'B' && *(header + 1) == 'M'))
+    {
+        printf("External image not in BMP format. %c, %c\n", *header, *(header + 1));
+        return;
+    }
+
+    file_size = *(uint32_t*)(header + 2);
+    px_arr_offset = *(uint32_t*)(header + 10);
+
+    file_dump = (char*)calloc(sizeof(char), file_size + 32);
+    memcpy(file_dump, header, 14);
+    fread(file_dump + 14, sizeof(char), file_size - 14, f);
+
+    world->extern_obj_w = *(int32_t*)(file_dump + 14 + 4);
+    world->extern_obj_h = *(int32_t*)(file_dump + 14 + 8);
+    bits_per_pixel = *(int16_t*)(file_dump + 14 + 14);
+    if (bits_per_pixel != 24 && bits_per_pixel != 32)
+    {
+        if (file_dump)
+            free(file_dump);
+        printf("External image not in 24-bit or 32-bit format. %d\n", bits_per_pixel);
+        return;
+    }
+    world->extern_obj = (vertex_obj*)calloc(sizeof(vertex_obj), world->extern_obj_h * world->extern_obj_w);
+    for (int h = 0; h < world->extern_obj_h; h++)
+    {
+        for (int w = 0; w < world->extern_obj_w; w++)
+        {
+            vertex_obj* v_obj = world->extern_obj + h * world->extern_obj_w + w;
+            v_obj->world = world;
+            reset_vertex(v_obj);
+        }
+    }
+    if (world->extern_obj_h < 0)
+    {
+        world->extern_obj_h = -world->extern_obj_h;
+        is_height_reversed = true;
+    }
+
+    printf("External image info: Height %d, Width: %d, Bits per pixel: %d, is_height_reversed: %d\n",
+        world->extern_obj_h, world->extern_obj_w, bits_per_pixel, is_height_reversed);
+
+    pixel_ptr = file_dump + px_arr_offset;
+    int row_size = ((world->extern_obj_w * (bits_per_pixel / 8) + 3) & (~3));
+    for (int h = 0; h < world->extern_obj_h; h++)
+    {
+        for (int w = 0; w < world->extern_obj_w; w++)
+        {
+            vertex_obj* v_obj = world->extern_obj + (world->extern_obj_h - 1 - h) * world->extern_obj_w + w;
+            if (is_height_reversed)
+                v_obj = world->extern_obj + h * world->extern_obj_w + w;
+            uint32_t col = *((uint32_t*)(pixel_ptr + w * (bits_per_pixel / 8)));
+            glm::vec3 col_v = glm::vec3((float)((col >> 16) & 0xff) / 256, (float)((col >> 8) & 0xff) / 256, (float)((col >> 0) & 0xff) / 256);
+            bool generated = false;
+            for (physics_property** phys_iter = &(phys_map[0]); *phys_iter != NULL; phys_iter++)
+            {
+                if (glm::length (col_v - (*phys_iter)->diffuse) < 0.05)
+                {
+                    generate_vertex(v_obj, *phys_iter);
+                    generated = true;
+                    break;
+                }
+            }
+            if (generated == false)
+            {
+                generate_vertex(v_obj, mario);
+                v_obj->col = col_v;
+            }
+        }
+        pixel_ptr += row_size;
+    }
+
+
+    if (file_dump)
+        free (file_dump);
+    fclose(f);
 }
 
 world_obj* make_world (int width, int height)
@@ -539,9 +733,11 @@ world_obj* make_world (int width, int height)
     phys_map[AIR] = air;
     phys_map[SAND] = sand;
     phys_map[WATER] = water;
+    phys_map[STEAM] = steam;
     phys_map[ROCK] = rock;
-    phys_map[FIRE] = fire;
+    phys_map[LAVA] = lava;
     phys_map[LIGHT] = light;
+    phys_map[MARIO] = mario;
 
     world_obj *world_out = (world_obj*)calloc (1, sizeof(world_obj));
     world_out->event_flag = true;
@@ -569,6 +765,7 @@ world_obj* make_world (int width, int height)
         for (int w = 0; w < world_out->width/4; w++)
             generate_vertex (world_out, world_out->width/2 - world_out->width/8 + w, world_out->height * 6/8 - h, rock);
     }
+    load_extern_obj(world_out);
     generate_circle (world_out, width*15/16-10, height/9+10, width/24, light);
 
     update_word_render_list (world_out);

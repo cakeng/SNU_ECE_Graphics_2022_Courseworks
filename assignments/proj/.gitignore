@@ -1,3 +1,4 @@
+*.exe
 *.o
 falling_sand
 CMakeCache.txt
