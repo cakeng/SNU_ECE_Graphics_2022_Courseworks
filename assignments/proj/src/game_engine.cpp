@@ -4,7 +4,7 @@
 
 physics_property _air = {
     .state = GAS, .material = AIR
-    , .diffuse = {0.75, 0.75, (float)243/256}, .reflect = {0.035, 0.035, 0.05}, .radiate = {0.006, 0.005, 0.01} 
+    , .diffuse = {(float)146 / 256, (float)144 / 256, (float)255/256}, .reflect = {0.015, 0.015, 0.03}, .radiate = {0.006, 0.005, 0.01}
     , .mass = 0.1f, .drag = 0.01, .flow = 1.0f,
     .apply_displacement = true, .apply_gravity = false,};
 physics_property* air = &_air;
@@ -22,7 +22,7 @@ physics_property _water = {
 physics_property* water = &_water;
 physics_property _steam = {
     .state = GAS,.material = STEAM
-    , .diffuse = {0.8, 0.8, 0.8}, .reflect = {0.2, 0.2, 0.3}, .radiate = {0.0, 0.0, 0.0}  
+    , .diffuse = {(float)220 / 256, (float)220 / 256, (float)220 / 256}, .reflect = {0.2, 0.2, 0.3}, .radiate = {0.0, 0.0, 0.0}
     , .mass = 0.001f, .drag = 0.35, .flow = 50.0f,
     .apply_displacement = true, .apply_gravity = true,};
 physics_property* steam = &_steam;
@@ -46,7 +46,7 @@ physics_property _light = {
 physics_property* light = &_light;
 physics_property _mario = {
     .state = SOLID,.material = MARIO
-    , .diffuse = {0.7, 0.4, 0.7}, .reflect = {0.4, 0.4, 0.4} , .radiate = {0.0, 0.0, 0.0}
+    , .diffuse = {0.7, 0.4, 0.7}, .reflect = {0.8, 0.8, 0.95} , .radiate = {0.0, 0.0, 0.0}
     , .mass = 6.0f, .drag = 1.0, .flow = 1.0f,
     .apply_displacement = false, .apply_gravity = false, };
 physics_property* mario = &_mario;
@@ -660,9 +660,9 @@ void update_word_render_list(world_obj* world)
     }
 }
 
-void load_extern_obj(world_obj* world)
+void load_extern_obj(world_obj* world, const char* img_loc)
 {
-    FILE* f = fopen("extern_img.bmp", "rb");
+    FILE* f = fopen(img_loc, "rb");
     if (f == NULL)
     {
         printf("External image does not exist.\n");
@@ -719,8 +719,8 @@ void load_extern_obj(world_obj* world)
         is_height_reversed = true;
     }
 
-    // printf("External image info: Height %d, Width: %d, Bits per pixel: %d, is_height_reversed: %d\n",
-    //     world->extern_obj_h, world->extern_obj_w, bits_per_pixel, is_height_reversed);
+    //printf("External image info: Height %d, Width: %d, Bits per pixel: %d, is_height_reversed: %d\n",
+    //    world->extern_obj_h, world->extern_obj_w, bits_per_pixel, is_height_reversed);
 
     pixel_ptr = file_dump + px_arr_offset;
     int row_size = ((world->extern_obj_w * (bits_per_pixel / 8) + 3) & (~3));
@@ -736,7 +736,7 @@ void load_extern_obj(world_obj* world)
             bool generated = false;
             for (physics_property** phys_iter = &(phys_map[0]); *phys_iter != NULL; phys_iter++)
             {
-                if (glm::length (col_v - (*phys_iter)->diffuse) < 0.05)
+                if (glm::length (col_v - (*phys_iter)->diffuse) < 0.001)
                 {
                     generate_vertex(v_obj, *phys_iter);
                     generated = true;
@@ -758,7 +758,7 @@ void load_extern_obj(world_obj* world)
     fclose(f);
 }
 
-world_obj* make_world (int width, int height)
+world_obj* make_world (int width, int height, int load_world)
 {
     // printf ("Building world of width %d, height %d\n", width, height);
     phys_map[AIR] = air;
@@ -791,13 +791,53 @@ world_obj* make_world (int width, int height)
             reset_vertex (v_obj);
         }
     }
-    for (int h = 0; h < 3; h++)
+   
+    if (load_world == 1)
     {
-        for (int w = 0; w < world_out->width/4; w++)
-            generate_vertex (world_out, world_out->width/2 - world_out->width/8 + w, world_out->height * 6/8 - h, rock);
+        load_extern_obj(world_out, "world1-1.bmp");
+        for (int h = 0; h < height; h++)
+        {
+            for (int w = 0; w < width; w++)
+            {
+                vertex_obj* targ = get_vtx(world_out, w, h);
+                if ((h >= 0 && h < world_out->extern_obj_h) && (w >= 0 && w < world_out->extern_obj_w))
+                {
+                    vertex_obj* ex_obj = world_out->extern_obj + h * world_out->extern_obj_w + w;
+                    if (targ && world_out->extern_obj)
+                    {
+                        generate_vertex(targ, ex_obj->phys_prop);
+                        targ->col = ex_obj->col;
+                    }
+                }
+                else if (targ)
+                {
+                    reset_vertex(targ);
+                }
+            }
+        }
+        free(world_out->extern_obj);
+        for (int h = 0; h < 2; h++)
+        {
+            for (int w = 0; w < width / 48; w++)
+            {
+                generate_circle(world_out, width * 15 / 16  - w, height *1/ 9 + 2 + h, width / 36, light);
+                generate_circle(world_out, width * 1 / 16  + w, height *1/ 9 + 2 + h, width / 36, light);
+                //generate_circle(world_out, width / 2 - width/32 + w, height/ 9 + 2 + h, width / 36, light);
+            }
+        }
     }
-    load_extern_obj(world_out);
-    generate_circle (world_out, width*15/16-10, height/9+10, width/24, light);
+    else
+    {
+        for (int h = 0; h < 3; h++)
+        {
+            for (int w = 0; w < world_out->width / 4; w++)
+                generate_vertex(world_out, world_out->width / 2 - world_out->width / 8 + w, world_out->height * 6 / 8 - h, rock);
+        }
+        generate_circle(world_out, width * 15 / 16 - 10, height / 9 + 10, width / 24, light);
+    }
+
+    load_extern_obj(world_out, "extern_img.bmp");
+    
 
     update_word_render_list (world_out);
 
@@ -845,8 +885,12 @@ world_obj* make_world (int width, int height)
 
 void free_world (world_obj *world)
 {
-    free (world->vertex_list);
-    free (world->render_list);
+    if (world->vertex_list)
+        free (world->vertex_list);
+    if (world->render_list)
+        free (world->render_list);
+    if (world->extern_obj)
+        free(world->extern_obj);
 }
 
 void update_world (world_obj *world)

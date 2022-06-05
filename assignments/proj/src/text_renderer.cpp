@@ -115,7 +115,7 @@ void TextRenderer::RenderText(std::string text, float x, float y, float scale
     int dotdotcount = 0;
     for (c = text.begin(); c != text.end(); c++)
     {
-        if (dotdotcount >= 3)
+        if (dotdotcount >= 4)
         {
             this->TextShader.setVec3("textColor", mat_color);
         }

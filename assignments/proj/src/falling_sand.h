@@ -113,7 +113,7 @@ void update_world_physics (world_obj *world);
 
 void update_word_render_list (world_obj *world);
 
-world_obj* make_world (int width, int height);
+world_obj* make_world (int width, int height, int load_world);
 
 void free_world (world_obj *world);
 
