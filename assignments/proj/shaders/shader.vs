@@ -76,9 +76,8 @@ void main()
             light += raytrace (pos, vec3 (world_w, h, 0));
             trace_num += 2;
         }
-        light += raytrace (pos, vec3 (world_w, 0, 0));
         
-        light /= float(trace_num * 6/7);
+        light /= float(trace_num * 5/8);
 
         light = (light + rad + vec3(0.1))*col*ref;
 

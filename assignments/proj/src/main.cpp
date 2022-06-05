@@ -20,7 +20,7 @@ physics_property *selected_phys = sand;
 world_obj *world;
 float current_time;
 
-int RTX_ON = 1;
+int RTX_ON = 0;
 int screen_w = SCR_WIDTH, screen_h = SCR_HEIGHT;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);

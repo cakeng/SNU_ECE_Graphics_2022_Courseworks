@@ -5,7 +5,7 @@
 physics_property _air = {
     .state = GAS, .material = AIR
     , .diffuse = {0.75, 0.75, (float)243/256}, .reflect = {0.035, 0.035, 0.05}, .radiate = {0.006, 0.005, 0.01} 
-    , .mass = 0.05f, .drag = 0.01, .flow = 1.0f,
+    , .mass = 0.1f, .drag = 0.01, .flow = 1.0f,
     .apply_displacement = true, .apply_gravity = false,};
 physics_property* air = &_air;
 physics_property _sand = {
@@ -22,8 +22,8 @@ physics_property _water = {
 physics_property* water = &_water;
 physics_property _steam = {
     .state = GAS,.material = STEAM
-    , .diffuse = {0.8, 0.8, 0.8}, .reflect = {0.9, 0.9, 0.9}, .radiate = {0.0, 0.0, 0.0}  
-    , .mass = 0.01f, .drag = 0.35, .flow = 1.0f,
+    , .diffuse = {0.8, 0.8, 0.8}, .reflect = {0.2, 0.2, 0.3}, .radiate = {0.0, 0.0, 0.0}  
+    , .mass = 0.001f, .drag = 0.35, .flow = 50.0f,
     .apply_displacement = true, .apply_gravity = true,};
 physics_property* steam = &_steam;
 physics_property _rock = {
@@ -35,7 +35,7 @@ physics_property* rock = &_rock;
 physics_property _lava = {
     .state = LIQUID,.material = LAVA
     , .diffuse = {1.0, 0.55, 0.3}, .reflect = {1.0, 0.85, 0.6} , .radiate = {0.88, 0.95, 0.3}
-    , .mass = 0.08f, .drag = 1.0, .flow = 1.5f,
+    , .mass = 0.14f, .drag = 1.0, .flow = 1.5f,
     .apply_displacement = true, .apply_gravity = true,};
 physics_property* lava = &_lava;
 physics_property _light = {
@@ -234,38 +234,69 @@ void kinetic_engine (vertex_obj *vtx)
 
     if (v_phys->material == LAVA)
     {
+        vertex_obj * targ = vtx;
+        int count = 0;
         bool rockd = false;
-        vertex_obj* rock_targ = u_vtx (vtx);
-        if (rock_targ && rock_targ->phys_prop->material == WATER)
+        while (count < 6)
         {
-            generate_vertex (vtx, rock);
-            generate_vertex (rock_targ, steam);
-            rockd = true;
-        }
-        rock_targ = d_vtx (vtx);
-        if (rock_targ && rock_targ->phys_prop->material == WATER)
-        {
-            generate_vertex (vtx, rock);
-            generate_vertex (rock_targ, steam);
-            rockd = true;
-        }
-        rock_targ = l_vtx (vtx);
-        if (rock_targ && rock_targ->phys_prop->material == WATER)
-        {
-            generate_vertex (vtx, rock);
-            generate_vertex (rock_targ, steam);
-            rockd = true;
-        }
-        rock_targ = r_vtx (vtx);
-        if (rock_targ && rock_targ->phys_prop->material == WATER)
-        {
-            generate_vertex (vtx, rock);
-            generate_vertex (rock_targ, steam);
-            rockd = true;
+            vertex_obj* rock_targ = u_vtx(targ);
+            if (rock_targ && rock_targ->phys_prop->material == WATER)
+            {
+                rockd = true;
+                generate_vertex(rock_targ, steam);
+                targ = rock_targ;
+                goto LOOP;
+            }
+            else if (rock_targ && rock_targ->phys_prop->material == ROCK)
+            {
+                targ = rock_targ;
+                goto LOOP;
+            }
+            rock_targ = d_vtx(targ);
+            if (rock_targ && rock_targ->phys_prop->material == WATER)
+            {
+                rockd = true;
+                generate_vertex(rock_targ, steam);
+                targ = rock_targ;
+                goto LOOP;
+            }
+            else if (rock_targ && rock_targ->phys_prop->material == ROCK)
+            {
+                targ = rock_targ;
+                goto LOOP;
+            }
+            rock_targ = l_vtx(targ);
+            if (rock_targ && rock_targ->phys_prop->material == WATER)
+            {
+                rockd = true;
+                generate_vertex(rock_targ, steam);
+                targ = rock_targ;
+                goto LOOP;
+            }
+            else if (rock_targ && rock_targ->phys_prop->material == ROCK)
+            {
+                targ = rock_targ;
+                goto LOOP;
+            }
+            rock_targ = r_vtx(targ);
+            if (rock_targ && rock_targ->phys_prop->material == WATER)
+            {
+                rockd = true;
+                generate_vertex(rock_targ, steam);
+                targ = rock_targ;
+                goto LOOP;
+            }
+            else if (rock_targ && rock_targ->phys_prop->material == ROCK)
+            {
+                targ = rock_targ;
+                goto LOOP;
+            }
+        LOOP:
+            count++;
         }
         if (rockd)
         {
-            return;
+            generate_vertex(vtx, rock);
         }
     }
     else if (v_phys->material == STEAM)
@@ -688,8 +719,8 @@ void load_extern_obj(world_obj* world)
         is_height_reversed = true;
     }
 
-    printf("External image info: Height %d, Width: %d, Bits per pixel: %d, is_height_reversed: %d\n",
-        world->extern_obj_h, world->extern_obj_w, bits_per_pixel, is_height_reversed);
+    // printf("External image info: Height %d, Width: %d, Bits per pixel: %d, is_height_reversed: %d\n",
+    //     world->extern_obj_h, world->extern_obj_w, bits_per_pixel, is_height_reversed);
 
     pixel_ptr = file_dump + px_arr_offset;
     int row_size = ((world->extern_obj_w * (bits_per_pixel / 8) + 3) & (~3));
