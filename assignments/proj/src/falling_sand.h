@@ -15,7 +15,7 @@
 
 #define SCR_WIDTH 1280
 #define SCR_RATIO 9/16
-#define SCR_HEIGHT (SCR_WIDTH*SCR_RATIO)
+#define SCR_HEIGHT 720
 
 #define WRD_WIDTH 288
 #define WRD_HEIGHT (WRD_WIDTH*SCR_RATIO)
@@ -88,6 +88,7 @@ struct world_obj
     int width;
     int height;
     int brush_size;
+    int fall_on;
 
     vertex_obj *vertex_list;
     render_obj *render_list;

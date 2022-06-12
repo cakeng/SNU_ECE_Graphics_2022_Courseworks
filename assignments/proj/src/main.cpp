@@ -20,7 +20,7 @@ physics_property *selected_phys = sand;
 world_obj *world;
 float current_time;
 
-int RTX_ON = 1;
+int RTX_ON = 1, fall_on = 1;
 int screen_w = SCR_WIDTH, screen_h = SCR_HEIGHT;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -97,6 +97,7 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        world->fall_on = fall_on;
         update_world (world);
         render_world (world, &renderShader, RTX_ON);
         draw_world (world, &drawShader, screen_w, screen_h);
@@ -171,12 +172,16 @@ void processInput(GLFWwindow* window)
 
     /**********Fill in the blank*********/
     static float rtx_last_time = 0.0;
-    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+    if (current_time - rtx_last_time > 0.2)
     {
-        if (current_time - rtx_last_time > 0.2)
+        rtx_last_time = current_time;
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
         {
-            rtx_last_time = current_time;
             RTX_ON ^= 1;
+        }
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+        {
+            fall_on ^= 1;
         }
     }
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)

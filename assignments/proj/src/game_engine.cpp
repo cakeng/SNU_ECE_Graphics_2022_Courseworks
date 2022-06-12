@@ -598,14 +598,17 @@ void update_world_physics (world_obj *world)
 {
     static float event_time[100] = {-10.0f};
 
-    if (world->current_time > event_time[0] + 0.1)
+    if (world->fall_on)
     {
-        generate_vertex (world, world->width/2 - world->width/12, 10, sand);
-        generate_vertex (world, world->width/2 + world->width/12, 10, sand);
-        generate_vertex (world, world->width/2, 10, water);
-        generate_vertex (world, world->width/2+4, 10, water);
-        generate_vertex (world, world->width/2-4, 10, water);
-        event_time[0]= world->current_time;
+        if (world->current_time > event_time[0] + 0.1)
+        {
+            generate_vertex(world, world->width / 2 - world->width / 12, 10, sand);
+            generate_vertex(world, world->width / 2 + world->width / 12, 10, sand);
+            generate_vertex(world, world->width / 2, 10, water);
+            generate_vertex(world, world->width / 2 + 4, 10, water);
+            generate_vertex(world, world->width / 2 - 4, 10, water);
+            event_time[0] = world->current_time;
+        }
     }
 
     int num_threads = std::thread::hardware_concurrency();
@@ -778,6 +781,7 @@ world_obj* make_world (int width, int height, int load_world)
     world_out->height = height;
     world_out->width = width;
     world_out->brush_size = 5;
+    world_out->fall_on = 1;
     world_out->vertex_list = (vertex_obj*)calloc (width*height, sizeof(vertex_obj));
     world_out->render_list = (render_obj*)calloc (width*height, sizeof(render_obj));
     int idx = 0;
